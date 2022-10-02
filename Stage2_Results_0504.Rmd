@@ -1,0 +1,1112 @@
+
+
+```{r all_data, message=FALSE, warning=FALSE, include=FALSE}
+# Load raw data 
+# Filter SP verification responses
+SP_V <-  dir(path = "..",
+      pattern = "all_rawdata_SP_V",   ## include in-site and internet data
+      recursive = TRUE, full.names = TRUE) %>% 
+      read_csv() %>%
+      # subset(correct == 1 & Match != "F") %>%  ## Exclude the incorrect responses and filler trials
+      subset(Match != "F") %>% #only exclude fillers so we can check accuracy 
+      inner_join(select(lab_info, PSA_ID, Language), by = "PSA_ID") %>%
+    distinct() %>% ## Merge the language aspects
+    mutate(Language = ifelse(Language == "Magyar", "Hungarian", Language)) %>%  ## Switch "Magyar" to "Hungrian"
+    mutate(Language = ifelse(Language == "Simple Chinese", "Simplified Chinese", Language)) %>%  ## Switch "Simple Chinese" to "Simplified Chinese"
+    mutate(Source = if_else(opensesame_codename == "osweb","osweb","site"), 
+           Subject = paste0(Source,"_",PSA_ID,"_",subject_nr)) ## Compose the unique participant id
+
+
+# Load PP verification responses
+PP <- dir(path = "..",
+      pattern = "all_rawdata_PP", 
+      recursive = TRUE, full.names = TRUE) %>% 
+      read_csv() %>%
+      # subset(correct == 1 & Identical != "F")  %>%  ## Exclude the incorrect responses and filler trials
+      subset(Identical != "F") %>% #only exclude filler so we can check accuracy
+      inner_join(select(lab_info, PSA_ID, Language), by = "PSA_ID") %>%
+    distinct() %>% ## Merge the language aspects
+    mutate(Language = ifelse(Language == "Magyar", "Hungarian", Language)) %>%  ## Switch "Magyar" to "Hungrian"
+    mutate(Language = ifelse(Language == "Simple Chinese", "Simplified Chinese", Language)) %>%  ## Switch "Simple Chinese" to "Simplified Chinese"
+    mutate(Source = if_else(opensesame_codename == "osweb","osweb","site"), 
+           Subject = paste0(Source,"_",PSA_ID,"_",subject_nr)) ## Compose the unique participant id
+
+
+# Load SP memory responses
+SP_M <- dir(path = "..",
+      pattern = "all_rawdata_SP_M", 
+      recursive = TRUE, full.names = TRUE) %>% 
+      read_csv()  %>%    
+      # subset(correct == 1) %>%  ## Exclude the incorrect responses and filler trials
+      inner_join(select(lab_info, PSA_ID, Language), by = "PSA_ID") %>%
+    distinct() %>% ## Merge the language aspects
+    mutate(Language = ifelse(Language == "Magyar", "Hungarian", Language)) %>%  ## Switch "Magyar" to "Hungrian"
+    mutate(Language = ifelse(Language == "Simple Chinese", "Simplified Chinese", Language)) %>%  ## Switch "Simple Chinese" to "Simplified Chinese"
+    mutate(Source = if_else(opensesame_codename == "osweb","osweb","site"), 
+           Subject = paste0(Source,"_",PSA_ID,"_",subject_nr)) ## Compose the unique participant id
+```
+
+```{r erin_counts, eval=FALSE, message=FALSE, warning=FALSE, include=FALSE}
+# check for participants with too many trials
+SP_V_counts <- SP_V %>% group_by(Subject) %>% summarize(n = n())
+
+
+## site_CAN_020_1
+## View(SP_V %>% filter(Subject == "site_CAN_020_1"))
+SP_V$Subject[SP_V$Subject == "site_CAN_020_1"] <- c(rep("site_CAN_020_1", 24),
+                                                    rep("site_CAN_020_1_2", 24))
+## osweb_PSA_002_587
+## View(SP_V %>% filter(Subject == "osweb_PSA_002_587"))
+## nrow(SP_V)
+SP_V <- SP_V %>% 
+  group_by(Subject) %>% 
+  filter(!duplicated(Target))
+## nrow(SP_V)
+SP_V_counts <- SP_V %>% group_by(Subject) %>% summarize(n = n())
+
+PP_counts <- PP %>% group_by(Subject) %>% summarize(n = n())
+
+SP_M_counts <- SP_M %>% group_by(Subject) %>% summarize(n = n())
+
+SP_M$Subject[SP_M$Subject == "site_CAN_020_1"] <- c(rep("site_CAN_020_1", 11), 
+                                                    rep("site_CAN_020_1_2", 11))
+
+
+
+SP_V_counts  %>% filter(n!=24)
+
+PP_counts %>% filter(n!=24)  ## post-study survey had no labels in OSWEB script
+```
+
+```{r site_SP_V, message=FALSE, warning=FALSE, include=FALSE}
+## Exclude the participants who had a accuracy lower than the preregistered exclusion criterion (70%) according to the previous study (Chen et al., 2020)
+
+## Summarize the valid participants' SP verification data
+SP_V_subj_site <- SP_V %>%
+    filter(opensesame_codename!="osweb") %>%  # exclude jatos data
+    group_by(Subject) %>%
+    mutate(acc = sum(correct)/n()) %>%
+    #mutate(acc = n()/24) %>%
+    filter(acc > .7) %>%
+    group_by(Language, PSA_ID, Subject, Match) %>%
+##    summarise(V_RT = median(response_time), V_Acc = n()/12)
+    summarise(V_RT = median(response_time), V_Acc = sum(correct)/n())  ## Erin revised the code code because the wrong responses did not
+
+## Export for app3
+write_csv(SP_V_subj_site, file="SP_V_subj_site.csv")
+
+## Tidy SP V data for mixed linear model
+SP_V_site_tidy <- SP_V %>% 
+  filter(Source!="osweb")
+```
+
+
+```{r site_SP_M, message=FALSE, warning=FALSE, include=FALSE}
+## Tidy SP M data for mixed linear model
+SP_M_site_tidy <- SP_M %>% 
+    filter(Source != "osweb")
+
+## Summarize the valid participants' SP memory data
+SP_M_subj_site <- SP_M_site_tidy %>%
+  group_by(Language, PSA_ID, Subject) %>% 
+#  summarise(M_Acc = n()/11)
+  summarise(M_Acc = sum(correct)/n())
+```
+
+
+```{r site_PP, message=FALSE, warning=FALSE, include=FALSE}
+## Tidy PP data for mixed linear model
+PP_site_tidy <- PP %>% 
+    filter(Source!="osweb") 
+
+
+## Summarize the valid participants' PP verification data
+PP_subj_site <- PP_site_tidy %>%
+    mutate(Match = (Orientation1 == Orientation2)) %>%
+    group_by(Language, PSA_ID, Subject, Match) %>%
+#    summarise(P_RT = median(response_time), P_Acc = n()/12) 
+    summarise(P_RT = median(response_time), P_Acc = sum(correct)/n()) 
+```
+
+
+```{r count_site, message=FALSE, warning=FALSE, include=FALSE}
+sum_site <- (SP_V_subj_site %>% # first part: SP V
+  group_by(Language, PSA_ID) %>%
+  summarise(SP_N = n()/2)) %>% #divide by 2 for match/no match 
+left_join(
+  SP_M_subj_site %>%           # second part: memory check
+    group_by(Language, PSA_ID) %>%
+    summarise(M_N = n()),
+  by = c("Language","PSA_ID")) %>%
+left_join(  
+(PP_subj_site %>%     # third part: PP
+  group_by(Language, PSA_ID) %>%
+  summarise(PP_N = n()/2)),   #divide by 2 for identical/different orientations 
+by=c("Language","PSA_ID")
+) 
+
+##sum_site %>% filter((SP_N != M_N) & (SP_N != PP_N))
+```
+
+
+```{r online_SP_V, message=FALSE, warning=FALSE, include=FALSE}
+## Tidy SP V data for mixed linear model
+SP_V_osweb_tidy <-  SP_V %>%
+      filter(Source=="osweb") %>%   # include jatos data
+      #subset(correct == 1 & Match != "F") %>%  ## Exclude the incorrect responses and filler trials
+    subset(Match != "F") %>% 
+    distinct() %>% ## Merge the language aspects
+    filter(!(PSA_ID == "USA_033" & subject_nr == 39)) ## exclude this participant who had not complete PP
+
+
+
+## Summarize the valid participants' SP verification data
+SP_V_subj_osweb <- SP_V_osweb_tidy %>%
+#    group_by(subject_nr) %>%
+    group_by(Subject) %>%
+#    mutate(acc = n()/24) %>%
+    mutate(acc = sum(correct)/n()) %>%
+    filter(acc > .7) %>%
+    group_by(Language, PSA_ID, Subject, Match) %>%
+#    summarise(V_RT = median(response_time), V_Acc = n()/12) 
+    summarise(V_RT = median(response_time), V_Acc = sum(correct)/n()) 
+
+## Export for app3
+write_csv(SP_V_subj_osweb, file="SP_V_subj_osweb.csv")
+
+
+```
+
+
+```{r online_SP_M, message=FALSE, warning=FALSE, include=FALSE}
+## Tidy SP M data for mixed linear model
+SP_M_osweb_tidy <-  SP_M %>%
+      filter(Source=="osweb") %>%   # include jatos data
+      distinct() %>% ## Merge the language aspects
+      filter(!(PSA_ID == "USA_033" & subject_nr == 39)) ## exclude this participant who had not complete PP
+
+## Summarize the valid participants' SP memory data
+SP_M_subj_osweb <- SP_M_osweb_tidy %>%
+  group_by(Language, PSA_ID, Subject) %>% 
+  #group_by(Language, PSA_ID, subject_nr) %>% 
+  summarise(M_Acc = sum(correct)/n())
+  #summarise(M_Acc = n()/11)
+```
+
+
+```{r online_PP, message=FALSE, warning=FALSE, include=FALSE}
+## Tidy PP data for mixed linear model
+PP_osweb_tidy <-  PP %>%
+      filter(Source=="osweb") %>%   # include jatos data
+      #subset(correct == 1 & Identical != "F")  %>%  ## Exclude the incorrect responses and filler trials
+    subset(Identical != "F") %>% 
+    distinct() %>% ## Merge the language aspects
+    filter(!(PSA_ID == "USA_033" & subject_nr == 39)) ## exclude this participant who had not complete PP
+
+## Summarize the valid participants' PP verification data
+PP_subj_osweb <- PP_osweb_tidy %>%
+    mutate(Match = (Orientation1 == Orientation2)) %>%
+    group_by(Language, PSA_ID, Subject, Match) %>%
+#    summarise(P_RT = median(response_time), P_Acc = n()/12) 
+    summarise(P_RT = median(response_time), P_Acc = sum(correct)/n()) 
+```
+
+
+```{r functions_pak02, message=FALSE, warning=FALSE, include=FALSE}
+## Compute the participants from labs and from Internet
+sum_osweb <- (SP_V_subj_osweb %>% 
+  group_by(Language, PSA_ID) %>%
+  summarise(SP_N = n()/2)) %>%
+left_join(  
+(PP_subj_osweb %>% 
+  group_by(Language, PSA_ID) %>%
+  summarise(PP_N = n()/2)),
+by=c("Language","PSA_ID")
+) 
+
+firstup <- function(x) {
+  substr(x, 1, 1) <- toupper(substr(x, 1, 1))
+  x
+}
+```
+
+# Results
+
+
+Within the data collected on-site, `r format(sum(sum_site$SP_N), scientific=FALSE, big.mark = ",")` participants finished the sentence-picture verification task and met the preregistered inclusion criterion (accuracy percentile > 70%); `r format(sum(sum_site$PP_N), scientific=FALSE, big.mark = ",")` participants finished the picture-picture verification task. Raw data files containing data for `r xfun::numbers_to_words(sum(sum_site$PP_N) - sum(sum_site$SP_N))` participants were lost due to human error. Within the data sets collected online, `r format(sum(sum_osweb$SP_N), scientific=FALSE, big.mark = ",")` participants finished the sentence-picture verification task and met the preregistered inclusion criterion; `r format(sum(sum_osweb$PP_N), scientific=FALSE, big.mark = ",")` participants finished the picture-picture verification task. <!--- All data and analyses are available on the source files (https://osf.io/p7avr/).  --->
+
+
+## Confirmatory analysis: Intra-lab analysis during data collection
+
+Before data collection, each lab decided whether they wanted to apply a sequential analysis [@schonbrodtSequentialHypothesisTesting2017] or whether they wanted to settle for a fixed sample size. The preregistered protocol for labs applying sequential analysis established that they could stop data collection upon reaching the preregistered criterion ($BF_{10} = 10\ or\ -10$), or the maximal sample size. Each laboratory chose a fixed sample size and an incremental n for sequential analysis before their data collection. <!---
+Most laboratories either chose a fixed sample size without applying sequential analysis, or applied sequential analysis and reached their maximal sample size. --->
+
+Two laboratories (HUN 001, TWN 001) stopped data collection at the preregistered criterion. Some laboratories did not conduct the sequential analysis on all their data because of one of the following reasons: (1) their data collection was interrupted by the pandemic outbreak; (2) participants performed worse in the online study; (3) too many of their participants were non-native speakers. Lab-specific results were reported on a public website as each laboratory completed data collection (details available in Appendix 2).
+
+
+## Confirmatory analysis: Inter-lab analysis of final data
+
+
+```{r preparation, message=FALSE, warning=FALSE, include=FALSE}
+if(sum(names(SP_V_site_tidy) == names(SP_V_osweb_tidy)) == dim(SP_V_site_tidy)[2]){
+  SP_V_tidy = bind_rows(SP_V_site_tidy, SP_V_osweb_tidy)
+    chunk_msg01 <- c("All columns in SP_V matched")
+} else {
+  chunk_msg01 <- c("Not all columns in SP_V matched")
+}
+
+if(sum(names(PP_site_tidy) == names(PP_osweb_tidy)) == dim(PP_site_tidy)[2]){
+  PP_tidy = bind_rows(PP_site_tidy, PP_osweb_tidy)
+    chunk_msg02 <- c("All columns in PP matched")
+} else {
+  chunk_msg02 <- c("Not all columns in PP matched")
+}
+
+
+if(sum(names(SP_M_site_tidy) == names(SP_M_osweb_tidy)) == dim(SP_M_site_tidy)[2]){
+  SP_M_tidy = bind_rows(SP_M_site_tidy, SP_M_osweb_tidy)
+    chunk_msg03 <- c("All columns in SP_M matched")
+} else {
+  chunk_msg03 <- c("Not all columns in SP_M matched")
+}
+```
+
+
+```{r erin_exclude_incorrects, include = FALSE, echo = FALSE}
+nrow(SP_V_tidy)
+SP_V_tidy <- SP_V_tidy %>% 
+  filter(correct == 1)
+nrow(SP_V_tidy)
+
+nrow(PP_tidy)
+PP_tidy <- PP_tidy %>% 
+  filter(correct == 1)
+nrow(PP_tidy)
+
+nrow(SP_M_tidy)
+SP_M_tidy <- SP_M_tidy %>% 
+  filter(correct == 1)
+nrow(SP_M_tidy)
+```
+
+```{r erin_outliers}
+# We will implement a minimum response latency 160
+# We will use a 2*MAD criterion to eliminate long response latencies
+# SP_V_tidy and PP_tidy has the variable "Outlier" denoted the outlier.
+SP_V_tidy <- SP_V_tidy %>% 
+  group_by(Subject) %>% 
+  mutate(MAD = mad(response_time),
+         med = median(response_time),
+         Outlier = response_time <= 160 | response_time >= (med + 2*MAD)) 
+
+
+## Export for app3
+write_csv(SP_V_tidy, file="SP_V_tidy.csv")
+
+
+PP_tidy <- PP_tidy %>% 
+  group_by(Subject) %>% 
+  mutate(MAD = mad(response_time),
+         med = median(response_time), 
+         Outlier = response_time <= 160 | response_time >= (med + 2*MAD)) 
+
+SP_M_tidy <- SP_M_tidy %>% 
+  group_by(Subject) %>% 
+  mutate(MAD = mad(response_time),
+         med = median(response_time)) 
+
+# Integrate this into the outlier analysis table, change out for lmer criterion and say why
+```
+
+
+
+```{r cycle_outlier_check, message=FALSE, warning=FALSE, include=FALSE}
+get_intercept <- function(set) {
+  t <- cbind(
+             Subject = levels(as.factor(set$Subject)),
+             (lmer(response_time ~ Match + (1|Subject), data = set) %>%
+  coef())$Subject %>%
+      as_tibble()%>%
+  mutate(#LowerBound = quantile(`(Intercept)`,probs=.25),
+         #UpperBound = quantile(`(Intercept)`,probs=.75),
+         Mark = 
+           (`(Intercept)` > quantile(`(Intercept)`,probs=.75)) | (`(Intercept)` < quantile(`(Intercept)`,probs=.25)) )
+    ) ## We should exclude the unusual fastest responses
+  
+  return(t)
+}
+
+LABS <- unique(SP_V_tidy$PSA_ID)
+
+outliers_marks <- NULL
+for(lab_id in LABS){
+  outliers_marks<- get_intercept( subset(SP_V_tidy,PSA_ID == lab_id)) %>%
+    mutate(LAB = lab_id) %>%
+    rbind(outliers_marks)
+}
+
+
+## Erin's revised outliers table are not like mine. The codes after this chunk can not access this table
+
+outliers_table <- SP_V_tidy %>% 
+    group_by(PSA_ID) %>% 
+    summarize(total_n = length(unique(Subject)), 
+              total_data = n(), 
+              total_outliers = sum(Outlier == T), 
+              prop = round(total_outliers / total_data, 2))
+
+
+
+
+## write_csv(outliers_table, file = "includes/files/outliers_table.csv")
+
+## Summarize outliers by lab
+## Show the table in Appendix (#3)
+#outliers_dist<- outliers_table %>%
+#  group_by(LAB) %>%
+#  summarise(N = sum(Outlier), Prop = round(sum(Outlier)/n(),2) ) #%>%
+#  rmarkdown::paged_table(options = list(rows.print = 10))
+```
+
+
+```{r summary-site, echo=FALSE, message=FALSE, warning=FALSE, paged.print=TRUE}
+# note that V_RT is before outliers and percent correct, subject_M is after both 
+SP_V_tidy %>% 
+  left_join(outliers_marks, by=c("PSA_ID" = "LAB", "Subject" = "Subject")) %>%
+  filter(Outlier == FALSE & Source == "site") %>% ## Outlier by MAD
+#  filter(Mark == FALSE & Source == "site") %>% ## Outlier by Shrinkage
+  group_by(Language, Subject, Match) %>%
+  summarise(subject_M = median(response_time), subject_ACC = n()/12) %>%
+  group_by(Language, Match) %>%
+  summarise(N = n(), med_RT = median(subject_M), mean_ACC =   mean(subject_ACC)) %>%
+  pivot_wider(names_from = Match, values_from = c(med_RT, mean_ACC)) %>%
+  mutate(Effect = (med_RT_N - med_RT_Y) ) %>%
+  transmute( N=N,
+             Mismatch_stat = paste0(round(med_RT_N),"(",format(round(mean_ACC_N*100,digits=2),nsmall=2),")"),
+             Match_stat = paste0(round(med_RT_Y),"(",format(round(mean_ACC_Y*100,digits=2),nsmall=2),")"),
+             Effect = Effect) %>%
+  kable(  
+    format = "latex",
+    booktabs = TRUE,
+    escape=FALSE,
+    col.names = c("Language","N","Mismatching","Matching","Match Advantage"),
+    align = c("l","r","r","r","r"),
+   caption = "Median reaction times and accuracy percentages (in parentheses) per match condition (Mismatching, Matching); Match advantage (difference in response times) by language in the on-site data."
+    )
+#  flextable() %>% 
+#  set_header_labels(Language = "Language", N = "N", Mismatch_stat ="Mismatching", Match_stat = "Matching", Effect = "match advantage")
+```
+
+
+```{r summary-osweb, echo=FALSE, message=FALSE, warning=FALSE, paged.print=TRUE}
+SP_V_tidy %>% 
+  left_join(outliers_marks, by=c("PSA_ID" = "LAB", "Subject" = "Subject")) %>%
+  filter(Outlier == FALSE & Source == "osweb") %>% ## Outlier by MAD
+#  filter(Mark == FALSE & Source == "osweb") %>% ## Outlier by Shrinkage
+  group_by(Language, Subject, Match) %>%
+  summarise(subject_M = median(response_time), subject_ACC = n()/12) %>%
+  group_by(Language, Match) %>%
+  summarise(N = n(), med_RT = median(subject_M), mean_ACC = mean(subject_ACC)) %>%
+  pivot_wider(names_from = Match, values_from = c(med_RT, mean_ACC)) %>%
+  mutate(Effect = (med_RT_N - med_RT_Y) ) %>%
+  transmute( N=N,
+             Mismatch_stat = paste0(round(med_RT_N),"(",format(round(mean_ACC_N*100,2),nsmall=2),")"),
+             Match_stat = paste0(round(med_RT_Y),"(",format(round(mean_ACC_Y*100,2),nsmall=2),")"),
+             Effect = Effect) %>%
+  kable(  
+    format = "latex",
+    booktabs = TRUE,
+    escape=FALSE,
+    col.names = c("Language","N","Mismatching","Matching","Match Advantage"),
+    align = c("l","r","r","r","r"),
+   caption = "Median reaction times and accuracy percentages (in parentheses) per match condition (Mismatching, Matching); Match advantage (difference in response times) by language in the web-based data."
+    )
+#  flextable() %>% 
+#  set_header_labels(Language = "Language", N = "N", Mismatch_stat ="Mismatching", Match_stat = "Matching", Effect = "match advantage")
+```
+
+
+**Identification of outliers.** Our preregistered plan included excluding outliers based on a linear mixed-model analysis for participants in the third quantile of the grand intercept (i.e., participants with the longest average response times). After examining the data from both online and in-person data collection, it became clear that both a minimum response latency and maximum response latency should be employed, as improbable times existed at both ends of the distribution [@kvalsethHickLawEquivalent2021; @proctorHickLawChoice2018]. The maximum response latency was calculated as two times the mean absolute deviation plus the median calculated separately for each participant. Individual participants were removed if they did not reach our accuracy criterion, and individual data points were excluded if they did not fall within the acceptable response time range. All the below data analysis depended on the datasets excluding the outliers.
+
+<!---For each laboratory, outliers were identified by the third quantile of the grand intercept in the simplest mixed-effects model. This mixed-effects model contained the response times as the dependent measure, matching condition as the only fixed effect, and the participant as the only random intercept. Among the data sets showing outliers, the averaged proportion of outliers was 0.25. Table S4 in Appendix 1 illustrates the distribution of outliers by laboratory. Table \@ref(tab:summary-site) and Table \@ref(tab:summary-osweb) respectively summarise the match advantages by language. --->
+
+(Insert Table \@ref(tab:summary-site) about here )
+
+(Insert Table \@ref(tab:summary-osweb) about here )
+
+
+
+```{r meta_setup, message=FALSE, warning=FALSE, include=FALSE}
+## Prepare the data sets for the meta analysis
+## All the sources
+SP_V_meta_data <- SP_V_tidy %>% 
+  left_join(outliers_marks, by=c("PSA_ID" = "LAB", "Subject" = "Subject")) %>%
+  left_join(rbind(SP_V_subj_site, SP_V_subj_osweb), 
+            by = c("Subject" = "Subject", 
+                   "Language" = "Language", 
+                   "Match" = "Match",
+                   "PSA_ID" = "PSA_ID")) %>% 
+  filter(Outlier == FALSE) %>%  ## Reserve the included data in each lab (by MAD)
+#  filter(Mark == FALSE) %>%  ## Reserve the included data in each lab (by shrinkage)
+  group_by(Language, PSA_ID, Subject,Match) %>%
+##  summarise(RT = mean(response_time), ACC = 100*(sum(correct)/12)) %>%
+  summarize(RT = median(response_time), ACC = mean(V_Acc)) %>%   pivot_wider(
+#    cols = Match:ACC,
+    names_from = Match,
+    values_from = c(RT,ACC)
+  ) %>%
+  group_by(Language,PSA_ID) %>%
+  summarise(m_match=median(RT_Y),m_mismatch=median(RT_N),
+            sd_match=sd(RT_Y),sd_mismatch=sd(RT_N),
+            acc_match=mean(ACC_Y),acc_mismatch=mean(ACC_N),
+            ni=n()) %>%
+  bind_cols(ri=.5)
+
+## Only from site
+SP_V_site_meta_data <- SP_V_tidy %>%
+  filter(Source == "site") %>%
+  left_join(outliers_marks, by=c("PSA_ID" = "LAB", "Subject" = "Subject")) %>%
+  left_join(rbind(SP_V_subj_site, SP_V_subj_osweb), 
+            by = c("Subject" = "Subject", 
+                   "Language" = "Language", 
+                   "Match" = "Match",
+                   "PSA_ID" = "PSA_ID")) %>% 
+  filter(Outlier == FALSE) %>%  ## Reserve the included data in each lab (by MAD)
+#  filter(Mark == FALSE) %>%  ## Reserve the included data in each lab (by shrinkage)
+  group_by(Language,PSA_ID,Subject,Match) %>%
+#  summarise(RT = mean(response_time), ACC = 100*(sum(correct)/12)) %>%
+### Erin used medians in the revised code ###
+  summarize(RT = median(response_time), ACC = mean(V_Acc)) %>%   pivot_wider(
+#    cols = Match:ACC,
+    names_from = Match,
+    values_from = c(RT,ACC)
+  ) %>%
+  group_by(Language,PSA_ID) %>%
+  summarise(m_match=median(RT_Y),m_mismatch=median(RT_N),
+            sd_match=sd(RT_Y),sd_mismatch=sd(RT_N),
+            acc_match=mean(ACC_Y),acc_mismatch=mean(ACC_N),
+            ni=n()) %>%
+  bind_cols(ri=.5)
+
+## Only from osweb
+SP_V_osweb_meta_data <- SP_V_tidy %>%
+  filter(Source == "osweb") %>%
+  left_join(outliers_marks, by=c("PSA_ID" = "LAB", "Subject" = "Subject")) %>%
+  left_join(rbind(SP_V_subj_site, SP_V_subj_osweb), 
+            by = c("Subject" = "Subject", 
+                   "Language" = "Language", 
+                   "Match" = "Match",
+                   "PSA_ID" = "PSA_ID")) %>% 
+  filter(Outlier == FALSE) %>%  ## Reserve the included data in each lab
+#  filter(Mark == FALSE) %>%  ## Reserve the included data in each lab (by shrinkage)
+  filter(!is.na(V_Acc)) %>% # remove people who were less than 70% so they don't match with join
+  group_by(Language,PSA_ID,Subject,Match) %>%
+##  summarise(RT = mean(response_time), ACC = 100*(sum(correct)/12)) %>%
+  summarize(RT = median(response_time), ACC = mean(V_Acc)) %>%   pivot_wider(
+#    cols = Match:ACC,
+    names_from = Match,
+    values_from = c(RT,ACC)
+  ) %>%
+  group_by(Language,PSA_ID) %>%
+  summarise(m_match=median(RT_Y),m_mismatch=median(RT_N),
+            sd_match=sd(RT_Y),sd_mismatch=sd(RT_N),
+            acc_match=mean(ACC_Y),acc_mismatch=mean(ACC_N),
+            ni=n()) %>%
+  bind_cols(ri=.5)
+
+SP_V_combine_meta_data <- bind_rows( bind_cols(Source = "site", SP_V_site_meta_data), bind_cols(Source="osweb",SP_V_osweb_meta_data))
+```
+
+
+**Meta-analysis of match advantages across laboratories.** Because the preregistered analysis plan did not consider the data collected online, we conducted the overall meta-analyses for the complete dataset and separately by data collection source.<!---all the datasets combined data sources. In this analysis, we computed the effect size by data set and estimated the global effect size.---> Since data from small samples may contribute to a biased estimate, nine datasets with sample sizes smaller than 25 were excluded from the analyses. The overall meta-analysis found <!---no--->insignificant match advantage (Figure \@ref(fig:meta-all)).Among the languages that had at least two datasets, we conducted the meta-analysis for English, German, Norway, Traditional Chinese, Slovak, and Turkey. Only <!---Traditional Chinese--->German showed a significant meta-analytic effect across laboratories(see Figure \@ref(fig:meta-ger)). Results of the other languages are available in Appendix 3.
+
+
+
+```{r meta-all, echo=FALSE, message=FALSE, warning=FALSE, paged.print=TRUE, fig.cap="Meta-analysis on match advantage of object orientation for all datasets"}
+es_data <- SP_V_meta_data %>%
+  filter((ni > 25)) ## Exclude small sample size
+SP_V_en_es <- escalc(measure = "MC", 
+         m1i = m_mismatch, m2i = m_match, 
+         sd1i = sd_mismatch, sd2i = sd_match, 
+         ni = ni, ri = ri, 
+         slab = PSA_ID, data=es_data)
+SP_V_meta_all <-  rma.uni(yi, vi, data = SP_V_en_es, slab = PSA_ID, method = "REML", digits = 2)
+
+forest(SP_V_meta_all, mlab = "")
+```
+
+
+(Insert Figure \@ref(fig:meta-all) about here)
+
+
+
+```{r meta-ger, echo=FALSE, message=FALSE, warning=FALSE, fig.cap="Meta-analysis on match advantage of object orientation for German datasets."}
+## Locate English data for meta-analysis
+SP_V_ger_meta_data <- SP_V_tidy %>%
+  filter(Language == "German") %>%
+##  left_join(outliers_table, by=c("PSA_ID" = "LAB", "Subject" = "Subject")) %>%
+  left_join(rbind(SP_V_subj_site, SP_V_subj_osweb), 
+            by = c("Subject" = "Subject", 
+                   "Language" = "Language", 
+                   "Match" = "Match",
+                   "PSA_ID" = "PSA_ID")) %>% 
+  filter(Outlier == FALSE) %>%  ## Reserve the included data in each lab
+  group_by(Language,PSA_ID,Subject,Match) %>%
+#  summarise(RT = mean(response_time), ACC = 100*(sum(correct)/12)) %>%
+  summarize(RT = median(response_time), ACC = mean(V_Acc)) %>% 
+  pivot_wider(
+#    cols = Match:ACC,
+    names_from = Match,
+    values_from = c(RT,ACC)
+  ) %>%
+  group_by(Language,PSA_ID) %>%
+  summarise(m_match=median(RT_Y),m_mismatch=median(RT_N),
+            sd_match=sd(RT_Y),sd_mismatch=sd(RT_N),
+            acc_match=mean(ACC_Y),acc_mismatch=mean(ACC_N),
+            ni=n()) %>%
+  bind_cols(ri=.5) %>%
+  filter((ni > 25)) ## Exclude lab less than 25 participants
+
+## Prepare the elements for computing the meta-analytic effect size
+SP_V_ger_es <- escalc(measure = "MC", 
+         m1i = m_mismatch, m2i = m_match, 
+         sd1i = sd_mismatch, sd2i = sd_match, 
+         ni = ni, ri = ri, 
+         slab = PSA_ID, data=SP_V_ger_meta_data)
+
+## Compute the meta-analytic effect size
+SP_V_meta <-  rma.uni(yi, vi, data = SP_V_ger_es, slab = PSA_ID, method = "REML", digits = 2)
+
+## Output the forest plot
+forest(SP_V_meta, mlab = "")
+```
+
+
+
+(Insert Figure \@ref(fig:meta-ger) about here)
+
+
+
+
+```{r meta-site, fig.cap="Meta-analysis", message=FALSE, warning=FALSE, include=FALSE, paged.print=TRUE}
+## We removed this chunck after the collaborators' appendix.
+es_data <- SP_V_site_meta_data %>%
+  filter((ni > 25)) ## Exclude small sample size
+SP_V_site_es <- escalc(measure = "MC", 
+         m1i = m_mismatch, m2i = m_match, 
+         sd1i = sd_mismatch, sd2i = sd_match, 
+         ni = ni, ri = ri, 
+         slab = PSA_ID, data=es_data)
+SP_V_meta_site <-  rma.uni(yi, vi, data = SP_V_site_es, slab = PSA_ID, method = "REML", digits = 2)
+
+##forest(SP_V_meta, mlab = "Data sets from sites")
+```
+
+<!---
+The meta-analysis of the lab-based data showed a match advantage with small effect size and little variation among laboratories. Only one laboratory (HUN 001) found a significant match advantage (Figure \@ref(fig:meta-site)).
+
+(Insert Figure \@ref(fig:meta-site) about here)
+--->
+
+```{r meta-osweb, fig.cap="Meta-analysis", message=FALSE, warning=FALSE, include=FALSE, paged.print=TRUE}
+## We removed this chunck after the collaborators' appendix.
+es_data <- SP_V_osweb_meta_data %>%
+  filter((ni > 25)) ## Exclude small sample size
+SP_V_osweb_es <- escalc(measure = "MC", 
+         m1i = m_mismatch, m2i = m_match, 
+         sd1i = sd_mismatch, sd2i = sd_match, 
+         ni = ni, ri = ri, 
+         slab = PSA_ID, data=es_data)
+SP_V_meta_osweb <-  rma.uni(yi, vi, data = SP_V_osweb_es, slab = PSA_ID, method = "REML", digits = 2)
+
+##forest(SP_V_meta, mlab = "Data sets from Internet")
+```
+
+<!---
+The meta-analysis of the Internet-based data revealed a match disadvantage with small effect size. Only one laboratory (NZL 005) found a match advantage (Figure \@ref(fig:meta-osweb)). There was greater variation among lab-based datasets than the Internet-based datasets.  
+
+(Insert Figure \@ref(fig:meta-osweb) about here)
+--->
+
+
+```{r SP-lme-data, message=FALSE, warning=FALSE, include=FALSE}
+# export data file for the making of appendix
+# SP_V_lme_data <- dir(path = "..",
+#      pattern = "SP_V_lme_data.csv",   ## include in-site and internet data
+#      recursive = TRUE, full.names = TRUE) %>% 
+#      read_csv() %>%
+#  inner_join(subset(outliers_table, Outlier == FALSE),by = c("Subject","PSA_ID" = "LAB"))
+
+  
+# SP_V_lme_data$Language <- ifelse(SP_V_lme_data$Language == "Magyar","Hungrian",SP_V_lme_data$Language)
+
+# SP_V_lme_data <- mutate(SP_V_lme_data,
+#                        Match = factor(Match,
+#                          levels = c("Y","N"),
+#                          labels = c("MATCHING","MISMATCHING")),
+#                        Source = factor(Source, 
+#                       levels = c("site","osweb"),
+#                       labels = c("Site","Internet") ))
+
+## Erin blocked the above code. There might be no data for the appendix.
+
+
+SP_V_lme_data <- SP_V_tidy %>% 
+   left_join(outliers_marks, by = c("PSA_ID" = "LAB", "Subject" = "Subject")) %>%
+  left_join(rbind(SP_V_subj_site, SP_V_subj_osweb), 
+            by = c("Subject" = "Subject", 
+                   "Language" = "Language", 
+                   "Match" = "Match",
+                   "PSA_ID" = "PSA_ID")) %>% 
+  filter(Outlier == FALSE) %>%  ## excluded outliers by MAD
+#  filter(Mark == FALSE) %>%  ## excluded outliers by shrinkage
+  filter(!is.na(V_Acc)) %>% # remove people who were less than 70% so they don't match with join
+  mutate(Match = factor(Match,
+                        levels = c("Y","N"),
+                        labels = c("MATCHING","MISMATCHING")),
+                        Source = factor(Source, 
+                        levels = c("site","osweb"),
+                        labels = c("Site","Internet") ))
+
+```
+
+
+
+```{r SP-source-lme, message=FALSE, warning=FALSE, include=FALSE}
+## analysis to decide if we had to analyze on-site and web-based respectively
+
+SP_V_lme_data$r_Source = if_else(SP_V_lme_data$Source == "Site",1,0)
+
+
+source_cor.lmer <- lmerTest::lmer(
+  response_time ~ Match*r_Source + 
+    (1|Subject) + 
+    (r_Source|PSA_ID) + 
+    (r_Source|Language), 
+  control = lmerControl(optimizer = "bobyqa",
+                        optCtrl = list(maxfun = 1e6)), 
+  data = SP_V_lme_data)
+
+source_cor_lmer_out <- round(summary(source_cor.lmer)$coefficients["r_Source",],3)
+```
+
+
+
+```{r SP-lang-lme, message=FALSE, warning=FALSE}
+## Check sample size of a language by team data
+#site_excluded_lang <- subset(SP_V_lme_data, Source=="Site") %>%
+team_excluded_lang <- SP_V_lme_data %>%
+  group_by(Language, Subject) %>%
+  summarise(N_trials = n()) %>%
+  group_by(Language) %>%
+  summarise(N = n()) %>%
+  filter(N < 25) %>%
+  pull(Language)  ## Excluded Portuguese because there was only one team and they stopped data collection due to global pandemics.
+
+## Allocate the site data (block because of no diff. between site and osweb)
+###SP_V_site_lme_data = subset(SP_V_lme_data, Source=="Site" & !(Language %in% site_excluded_lang))
+
+SP_V_lme_data = subset(SP_V_lme_data, !(Language %in% team_excluded_lang) )
+
+## Check the fittest model
+
+#m_Rsubject <- lmer(response_time ~ Language*Match + (1|Subject), data = SP_V_lme_data)
+
+#m_Rsubject_Rtarget <- lmer(response_time ~ Language*Match + (1|Subject) + (1|Target), data = SP_V_lme_data)
+
+#anova(m_Rsubject, m_Rsubject_Rtarget) ## Best fit model has random intercepts of particpants and items.
+
+
+## Run the mixed effect model by site data
+site_cor.lmer =lmer(response_time ~ Language*Match + (1|Subject) + (1|Target), 
+#  control = lmerControl(optimizer = "bobyqa",
+#                        optCtrl = list(maxfun = 1e6)), 
+#  data = SP_V_site_lme_data)
+  data = SP_V_lme_data)
+
+## compute CI of coefficients
+###confint(site_cor.lmer)
+
+## Check sample size of a language by osweb data(blocked the code)
+#osweb_excluded_lang <- subset(SP_V_lme_data, Source=="Internet") %>%
+#  group_by(Language, Subject) %>%
+#  summarise(N_trials = n()) %>%
+#  group_by(Language) %>%
+#  summarise(N = n()) %>%
+#  filter(N < 25) %>%
+#  pull(Language)  ## Exclude the languages less than 25 participants
+
+## Allocate the osweb data
+#SP_V_osweb_lme_data = subset(SP_V_lme_data, Source=="Internet" & !(Language %in% osweb_excluded_lang))
+
+#osweb_cor.lmer = lmerTest::lmer(response_time ~ Language*Match + (1|Subject), 
+#  control = lmerControl(optimizer = "bobyqa",
+#                        optCtrl = list(maxfun = 1e6)), # Increase maximum number of iterations to facilitate model convergence , 
+#                    data = SP_V_osweb_lme_data)
+
+## Create the stat info in the article
+site_cor_lme_out <- round(summary(site_cor.lmer)$coefficients["MatchMISMATCHING",],3)
+
+site_cor_lme_greek_out <- round(summary(site_cor.lmer)$coefficients["LanguageGreek:MatchMISMATCHING",],3)
+site_cor_lme_BraPor_out <- round(summary(site_cor.lmer)$coefficients["LanguageBrazilian Portuguese:MatchMISMATCHING",],3)
+site_cor_lme_Hindi_out <- round(summary(site_cor.lmer)$coefficients["LanguageHindi:MatchMISMATCHING",],3)
+site_cor_lme_Hungarian_out <- round(summary(site_cor.lmer)$coefficients["LanguageHungarian:MatchMISMATCHING",],3)
+site_cor_lme_Serbian_out <- round(summary(site_cor.lmer)$coefficients["LanguageSerbian:MatchMISMATCHING",],3)
+site_cor_lme_SChinese_out <- round(summary(site_cor.lmer)$coefficients["LanguageSimplified Chinese:MatchMISMATCHING",],3)
+
+
+
+#site_cor_lme_out <- round(summary(site_cor.lmer)$coefficients["MatchMISMATCHING",],3)
+#site_cor_lme_greek_out <- round(summary(site_cor.lmer)$coefficients["LanguageGreek:MatchMISMATCHING",],3)
+#osweb_cor_lme_out <- round(summary(osweb_cor.lmer)$coefficients["MatchMISMATCHING",],3)
+#osweb_cor_lme_serbian_out <- round(summary(osweb_cor.lmer)$coefficients["LanguageSerbian:MatchMISMATCHING",],3)
+#
+# paste0("*b* = ", osweb_cor_lme_out["Estimate"], ", *SE* = ",osweb_cor_lme_out["Std. Error"],", t( ",osweb_cor_lme_out["df"]," ) = ",osweb_cor_lme_out["t value"], ", *p* = ",osweb_cor_lme_out["Pr(>|t|)"])
+
+
+## `r xfun::numbers_to_words(sum(summary(site_cor.lmer)$coefficients[2:14,"Pr(>|t|)"] < .05))`
+```
+
+**Evaluating match advantages using linear mixed-effects models.**  <!--- Considering the bias of small sample size, we excluded data from the languages with below less than 25 participants in each data source  (Portuguese – on-site; Norwegian – web-based) before conducting the mixed-effects models. Thus we excluded Portuguese in the on-site data and Norwegian in the web-based data, the sources of data collection included the labs and the web were varied, we had to evaluate evaluated whether one mixed-effects model sufficiently fitted all the data. <!---Otherwise, separate models would be needed for each data set. --->We at first evaluated whether one mixed-effects model sufficiently fitted all the data from on-site and web-based data. This analysis showed no difference between data sources: `r paste0("*b* = ", source_cor_lmer_out["Estimate"], ", *SE* = ",source_cor_lmer_out["Std. Error"],", t( ",source_cor_lmer_out["df"]," ) = ",source_cor_lmer_out["t value"], ", *p* = ", source_cor_lmer_out["Pr(>|t|)"])`. Therefore<!---us--->, the following analysis did not separate on-site and the web-based data. <!--- The final models examined the interaction between language and match advantage. in each data source, as reported below.--->All other models are reported in Appendix 4. <!---It must be acknowledged that the languages with larger sample sizes (see Tables \@ref(tab:summary-site) and \@ref(tab:summary-osweb)) have more reliable results. Furthermore, most of the languages were underpowered, being far from the 1,2001,000 participants suggested by an a priori power analysis. --->
+
+<!---In each data source, w--->We compared the fitness of the models with and without the random intercept<!---slope---> of items<!---matching condition--->. <!---Both--->The result indicated that the models with<!---out---> the random intercept<!---slope---> had the best fitness. The model <!---from the on-site data --->revealed no significant effect of match advantage: `r paste0("*b* = ", site_cor_lme_out["Estimate"], ", *SE* = ",site_cor_lme_out["Std. Error"],", t( ",site_cor_lme_out["df"]," ) = ",site_cor_lme_out["t value"], ", *p* = ",site_cor_lme_out["Pr(>|t|)"])` and no interaction of match advantage and any language, all *ps* > .05. <!---The model from the web-based data also failed to reveal a significant effect: . The latter model had a negative coefficient, unlike the on-site data. the difference in direction resounds with the match advantages and disadvantages found in experiments using the property of color [cf. @connellRepresentingObjectColour2007; @zwaanRevisitingMentalSimulation2012].---> <!---Figure \@ref(fig:plot-SP-site-lme) illustrates the response times from the on-site data.---> <!--- presented significant intercepts---> (see “Models including languages” section in Appendix 4).   
+
+(Insert Figure \@ref(fig:plot-SP-site-lme) about here)
+
+
+```{r plot-SP-site-lme, message=FALSE, warning=FALSE, fig.cap="Response times and standard error in the sentence-picture verification task by match condition in each language."}
+# Plot interaction
+sjPlot::set_theme(axis.angle.x = 45,
+                  axis.textsize = .8)
+
+sjPlot::plot_model(site_cor.lmer, 
+                   type = "eff", 
+                   terms = c('Language', 'Match'), 
+                   #ci.lvl = .95,
+                   se = TRUE,
+                    colors = "gs") +
+  ylab("Response Time(ms)") + 
+  labs(title = "") + 
+  theme(panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        panel.background = element_blank(), 
+        axis.line = element_line(colour = "black"))
+
+```
+
+
+```{r plot-SP-osweb-lme, eval=FALSE, fig.cap="Response", message=FALSE, warning=FALSE, include=FALSE}
+# Plot interaction
+#sjPlot::set_theme(axis.angle.x = 45,
+#                  axis.textsize = .8)
+
+#sjPlot::plot_model(osweb_cor.lmer, 
+#                   type = "eff", 
+#                   terms = c('Language', 'Match'), 
+                #   ci.lvl = .95,
+#                   se = TRUE,
+#                    colors = "gs") +
+#  ylab("Response Time(ms)") + 
+#  labs(title = "") + 
+#  theme(panel.grid.major = element_blank(),
+#        panel.grid.minor = element_blank(),
+#        panel.background = element_blank(), 
+#        axis.line = element_line(colour = "black"))
+### firstup(xfun::numbers_to_words(sum(summary(osweb_cor.lmer)$coefficients[2:14,"Pr(>|t|)"] < .05)))
+
+##  (*M* = `r round(mean(subset(SP_V_lme_data, Language=="Greek") %>% pull(response_time)),2)`, *SD* = `r round(sd(subset(SP_V_lme_data, Language=="Greek") %>% pull(response_time)),2)`) and Serbian (*M* = `r round(mean(subset(SP_V_lme_data, Language=="Serbian") %>% pull(response_time)),2)`, *SD* = `r round(sd(subset(SP_V_lme_data, Language=="Serbian") %>% pull(response_time)),2)`) was longer than the average across languages (M = `r round(mean(SP_V_lme_data$response_time),2)`, SD = `r round(sd(SP_V_lme_data$response_time),2)`)
+```
+
+
+
+<!--- 
+Figure \@ref(fig:plot-SP-osweb-lme) illustrates the response times in the web-based data. `r ` languages presented significant effects (see “Models included languages” section in Appendix 4).
+
+(Insert Figure \@ref(fig:plot-SP-osweb-lme) about here)
+
+Removed this section because Greek data had no effect after we excluded the shortest response times. --->
+<!---**Anecdotal evidence on the match advantage.** In the on-site data, only Greek presented a match advantage, `r paste0("*b* = ", site_cor_lme_greek_out["Estimate"], ", *SE* = ",site_cor_lme_greek_out["Std. Error"],", t( ",site_cor_lme_greek_out["df"]," ) = ",site_cor_lme_greek_out["t value"], ", *p* = ",format(round(site_cor_lme_greek_out["Pr(>|t|)"],3),nsmall=3) )`. It should be noted, however, that these results are not robust due to the underpowered sample sizes (see Discussion). The mean median response times in Greek. This might not be coincidental, as according to @yapRespondingNonwordsLexical2014, longer response times have been associated with larger effects in psycholinguistics [@schillingComparingNamingLexical1998; @seidenbergTimeCoursePhonological1985; @tainturierEducationalLevelWord1992]. (**This paragraph requires the further discussion.**)  --->
+
+```{r PP_data_preparation, message=FALSE, warning=FALSE}
+## Dataset for mixed-effect model
+PP_lme_data <- PP_tidy %>% 
+#  left_join(outliers_table, by=c("PSA_ID" = "LAB", "Subject" = "Subject")) %>%  ## filter the outliers by SP_V data
+  filter(Outlier == FALSE) %>% #filter outlier by time rule established above
+  # consider excluding people who couldn't get these right 
+  # using the same accuracy levels as above 
+  left_join(rbind(PP_subj_osweb, PP_subj_site), 
+             by = c("Subject" = "Subject", 
+                   "Language" = "Language", 
+                   "PSA_ID" = "PSA_ID")) %>% 
+  filter(P_Acc >= .70)
+```
+
+
+```{r PP_lang_lme, message=FALSE, warning=FALSE}
+
+
+PP_lme_data <- mutate(PP_lme_data,
+                        Identical= factor(Identical,
+                          levels = c("Y","N"),
+                          labels = c("SAME","DIFF")))
+
+PP.lang.zero_slope.cor.lme <- lmerTest::lmer(response_time ~ 
+                    Identical*Language +                # Fixed effect
+                    (1 | Subject) +   # By-subject random intercept
+                    (1 | Picture1) +   # By-item random intercept
+                    (1 | PSA_ID),    # By-lab random intercept
+                    data = PP_lme_data,
+                    control = lmerControl(optimizer = "bobyqa",optCtrl = list(maxfun = 1e6)) # Increase maximum number of iterations to facilitate model convergence 
+                    ) 
+pp_cor_lme_out <- round(summary(PP.lang.zero_slope.cor.lme)$coefficients["IdenticalDIFF",],3)
+
+#reported_p <- ifelse(pp_cor_lme_out["Pr(>|t|)"] < .001,"< .001", paste0("= ", pp_cor_lme_out["Pr(>|t|)"]))
+
+```
+
+
+**Analysis of imagery scores.** Prior to data collection, we assumed the imagery scores of every language group would be nearly equal. The best-fitting model included random intercepts for participants, targets and laboratories but no slopes for orientation. The fixed effect of orientation match was significant, `r paste0("*b* = ", pp_cor_lme_out["Estimate"], ", *SE* = ",pp_cor_lme_out["Std. Error"],", t( ",pp_cor_lme_out["df"]," ) = ",pp_cor_lme_out["t value"], ", *p* ", ifelse(pp_cor_lme_out["Pr(>|t|)"] < .001,"< .001", paste0("= ", pp_cor_lme_out["Pr(>|t|)"])))`. The response times illustrated in Figure \@ref(fig:plot-PP-lme) indicated that the imagery scores measured for each language were consistently positive supporting our hypothesis. The coefficients of all evaluated mixed-effects models are reported in Appendix 5. 
+
+(Insert Figure \@ref(fig:plot-PP-lme) about here) 
+
+
+```{r plot-PP-lme, message=FALSE, warning=FALSE, fig.cap="Response times and standard error in the picture-picture verification task by match condition in each language (both on-site and web-based data)."}
+# Plot interaction
+sjPlot::set_theme(axis.angle.x = 45,
+                  axis.textsize = .8)
+
+sjPlot::plot_model(PP.lang.zero_slope.cor.lme, 
+                   type = "eff", 
+                   terms = c('Language', 'Identical'), 
+                #   ci.lvl = .95,
+                   se = TRUE,
+                    colors = "gs") +
+  ylab("Response Time(ms)") + 
+  labs(title = "") + 
+  theme(panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        panel.background = element_blank(), 
+        axis.line = element_line(colour = "black"))
+
+```
+
+
+
+```{r prediction_data, message=FALSE, warning=FALSE}
+## Dataset for traditional ANOVA
+PP_aov_data <- PP_tidy %>% #left_join(outliers_table, by=c("PSA_ID" = "LAB", "Subject" = "Subject")) %>%  ## filter the outliers by SP_V data
+  filter(Outlier == FALSE) %>%#filter outlier by time rule established above
+  # consider excluding people who couldn't get these right 
+  # using the same accuracy levels as above 
+#mutate(Subject = paste0(Source,"_",PSA_ID,"_",subject_nr)) %>%
+  left_join(rbind(PP_subj_osweb, PP_subj_site), 
+             by = c("Subject" = "Subject", 
+                   "Language" = "Language", 
+                   "PSA_ID" = "PSA_ID")) %>% 
+  filter(P_Acc >= .70) %>% 
+  group_by(Source, Language, PSA_ID, Subject, Identical) %>%
+  summarise(subject_M = median(response_time), subject_ACC = mean(P_Acc))
+
+## I will merge the SP_V and PP data by participants' mean response times
+##model_site_data <- (SP_V_tidy %>% 
+model_data <- (SP_V_tidy %>% 
+#                      left_join(outliers_table, by=c("PSA_ID" = "LAB", "Subject" = "Subject")) %>%
+#  filter(Language != site_excluded_lang & Outlier == FALSE & Source == "site") %>%
+##  mutate(Subject = paste0(Source,"_",PSA_ID,"_",subject_nr)) %>%
+  left_join(rbind(SP_V_subj_site, SP_V_subj_osweb), 
+            by = c("Subject" = "Subject", 
+                   "Language" = "Language", 
+                   "Match" = "Match",
+                   "PSA_ID" = "PSA_ID")) %>% 
+  filter(Outlier == FALSE) %>% 
+  filter(!is.na(V_Acc)) %>% # remove people who were less than 70% so they don't match with join
+#  filter(Language != site_excluded_lang) %>% 
+#  filter(Source == "site") %>% 
+  group_by(Language, Subject, Match) %>%
+  summarise(subject_M = median(response_time)) %>%
+#  group_by(Language, Match) %>%
+#  summarise(N = n(), med_RT = median(subject_M), mean_ACC =   mean(subject_ACC)) %>%
+  pivot_wider(names_from = Match, values_from = c(subject_M)) %>%
+  mutate(Effect = (N - Y) )) %>%
+left_join(
+(PP_aov_data %>%
+  select(-subject_ACC) %>%
+  pivot_wider(names_from = Identical, values_from = subject_M) %>%
+  mutate(Imagery = (N - Y))),
+by = c("Language","Subject")
+)
+
+
+#model_osweb_data <- (SP_V_tidy %>%
+#                       left_join(outliers_table, by=c("PSA_ID" = "LAB", "Subject" = "Subject")) %>%
+#  filter(Language != osweb_excluded_lang & Outlier == FALSE & Source == "osweb" ) %>%
+##  mutate(Subject = paste0(Source,"_",PSA_ID,"_",subject_nr)) %>%
+#  left_join(rbind(SP_V_subj_site, SP_V_subj_osweb), 
+#            by = c("Subject" = "Subject", 
+#                   "Language" = "Language", 
+#                   "Match" = "Match",
+#                   "PSA_ID" = "PSA_ID")) %>% 
+#  filter(Outlier == FALSE) %>% 
+#  filter(!is.na(V_Acc)) %>% # remove people who were less than 70% so they don't match with join
+#  filter(Language != site_excluded_lang) %>% 
+#  filter(Source == "osweb") %>% 
+#  group_by(Language, Subject, Match) %>%
+#  summarise(subject_M = median(response_time)) %>%
+#  group_by(Language, Match) %>%
+#  summarise(N = n(), med_RT = median(subject_M), mean_ACC =   mean(subject_ACC)) %>%
+#  pivot_wider(names_from = Match, values_from = c(subject_M)) %>%
+#  mutate(Effect = (N - Y) )) %>%
+#left_join(
+#(PP_aov_data %>%
+#  select(-subject_ACC) %>%
+#  pivot_wider(names_from = Identical, values_from = subject_M) %>%
+#  mutate(Imagery = (N - Y))),
+#by = c("Language","Subject")
+#)
+```
+
+The above analyses suggested that data sources did not influence the imagery scores but did influence the match advantage. Therefore, we compared <!---evaluated the fit of --->the model of<!---with---> languages and imagery scores and the model with languages only. Both models included match advantage as the dependent variable. If imagery scores predicted match advantage, the model with languages and imagery scores should fit the data better than the model with languages only. Because the random slopes for items <!---in the analyses of the match advantage--->were zero (see Appendix 5), the data for building the regression models were the aggregated data by participants. (**Require advice for precise writing**)
+
+
+```{r prediction_model, message=FALSE, warning=FALSE, include=FALSE}
+
+lang_model1 <- lm(Effect ~ Language*Imagery, data=model_data)
+lang_model0 <- lm(Effect ~ Language, data=lang_model1$model)
+model_test <- anova(lang_model0, lang_model1)[2,c("Res.Df","F","Df","Pr(>F)")]
+lang_results <- apa_print(lang_model0)
+```
+
+```{r site_model, eval=FALSE, message=FALSE, warning=FALSE, include=FALSE}
+
+#site_lang_model1 <- lm(Effect ~ Language*Imagery, data=model_site_data)
+#site_lang_model0 <- lm(Effect ~ Language, data=site_lang_model1$model)
+#site_test <- anova(site_lang_model0, site_lang_model1)[2,c("Res.Df","F","Df","Pr(>F)")]
+#site_lang_results <- apa_print(site_lang_model0)
+```
+
+
+```{r osweb_model, eval=FALSE, message=FALSE, warning=FALSE, include=FALSE}
+#osweb_lang_model1 <- lm(Effect ~ Language*Imagery, data=model_osweb_data)
+#osweb_lang_model0 <- lm(Effect ~ Language, data=osweb_lang_model1$model)
+#osweb_test <- anova(osweb_lang_model0, osweb_lang_model1)[2,c("Res.Df","Df","F","Pr(>F)")]
+#osweb_lang_results <- apa_print(osweb_lang_model1)
+#paste0("*F* (",osweb_test["Df"],",",osweb_test["Res.Df"],") = ",round(osweb_test["F"],3),", *p* =", format(round(site_test["Pr(>F)"],3),nsamll=3) )
+#
+##`r osweb_lang_results$full_result$Imagery`
+```
+
+In the linear regression analysis, we selected the best fit model from the model <!---with--->for only one predictor, language, and the model with two predictors, language and imagery scores. Because the analysis of match advantage revealed <!---the--->a difference between on-site versus web-based data, we conducted separate regression analyses for the two data sources. In the analysis of the on-site data, the model with language with language only<!---and imagery scores had yet---> fit the data as good as <!---better than --->the model with language and imagery scores<!---only--->, `r paste0("*F* (",model_test["Df"],",",model_test["Res.Df"],") = ",round(model_test["F"],3),", *p* =", format(round(model_test["Pr(>F)"],3),nsamll=3) )`. <!---In contrast, in the analysis of the web-based data , the model with language and imagery scores had a better fit than also indicated the model with language only had the best fitness, . In the latter case, the effect of imagery scores was nonsignificant, . The imagery scores obviously was not a reliable predictor for the match advantage of object orientation. (**Revised summary; require the co-authors' comments**) Appendix 5 summarized the coefficients of the models included in these analyses. --->
+
+## Exploratory analysis: Language-specific match advantages
+
+
+```{r EN_data, message=FALSE, warning=FALSE, include=FALSE}
+## Import data file for discussion
+#SP_V_eng_tidy <- dir(path = "..",
+#      pattern = "SP_V_eng_tidy",   ## include in-site and internet data
+#      recursive = TRUE, full.names = TRUE) %>%
+#      read_csv()
+
+#SP_V_eng_tidy <- mutate(SP_V_eng_tidy,
+#                        Match = factor(Match,
+#                          levels = c("Y","N"),
+#                          labels = c("MATCHING","MISMATCHING")),
+#                        Source = factor(Source, 
+#                       levels = c("site","osweb"),
+#                       labels = c("Site","Internet") ))
+
+SP_V_eng_tidy <- SP_V_lme_data %>% # basically you want this dataset, already filtered for outliers and accuracy people but only english rather than pulling a file that was not included in this processing / or the OSF folder
+  filter(Language == "English")
+
+```
+
+
+
+```{r GER_data_define, message=FALSE, warning=FALSE, include=FALSE}
+#SP_V_TC_tidy <- dir(path = "..",
+#      pattern = "SP_V_TC_tidy",   ## include in-site and internet data
+#      recursive = TRUE, full.names = TRUE) %>%
+#      read_csv()
+
+#SP_V_TC_tidy <- mutate(SP_V_TC_tidy,
+#                        Match = factor(Match,
+#                          levels = c("Y","N"),
+#                          labels = c("MATCHING","MISMATCHING")),
+#                        Source = factor(Source, 
+#                       levels = c("site","osweb"),
+#                       labels = c("Site","Internet") ))
+
+SP_V_GER_tidy <- SP_V_lme_data %>% # basically you want this dataset, already filtered for outliers and accuracy people but only english rather than pulling a file that was not included in this processing / or the OSF folder
+  filter(Language == "German")
+
+```
+
+
+
+Based on our exploratory plan described earlier<!---the policy to conduct the linguistic-specific mixed-effect models--->, we selected the English datasets ($N$ = `r format(length(unique(SP_V_eng_tidy$Subject)), scientific=FALSE, big.mark = ",")`) and the <!---Traditional Chinese--->German datasets ($N$ = `r format(length(unique(SP_V_GER_tidy$Subject)), scientific=FALSE, big.mark = ",")`). For both languages, we are interested in whether the data sources would show differences in the<!---could inhibit the --->match advantage. Another topic of interest is if the match advantage changed with English dialects, namely American English and British English.
+
+
+```{r Eng_effect01_lme, message=FALSE, warning=FALSE, include=FALSE}
+#SP_V_eng_tidy$r_System = if_else(SP_V_eng_tidy$System == "US",1,0)
+SP_V_eng_tidy$r_System <- if_else(
+  grepl("PSA|USA", SP_V_eng_tidy$PSA_ID),
+  1, 0)
+
+#SP_V_eng_tidy$r_Source = if_else(SP_V_eng_tidy$Source == "Site",1,0)
+
+eng_no_slope.lmer = lmerTest::lmer(response_time ~ Match*r_System + (1|Subject) + (1|Target) + (1|PSA_ID), control = lmerControl(optimizer = "bobyqa", optCtrl = list(maxfun = 1e6)),  data = SP_V_eng_tidy)
+
+## `r paste0("*b* = ", round(summary(eng_no_slope.lmer)$coefficients["r_Source","Estimate"],3), ", *SE* = ",round(summary(eng_no_slope.lmer)$coefficients["r_Source","Std. Error"],3),", t( ",round(summary(eng_no_slope.lmer)$coefficients["r_Source","df"],3)," ) = ",round(summary(eng_no_slope.lmer)$coefficients["r_Source","t value"],3), ", *p* < .001")`
+```
+
+Using the data from `r format(length(unique(SP_V_eng_tidy$Subject)), scientific=FALSE, big.mark = ",")` English speaking participants, we ran a mixed-effects model using<!---for the English data containing orientation --->match condition<!---,---> and English dialects (American vs. British)<!--- and data sources (on-site vs. web-based)---> as fixed effects. The fittest model indicated the difference between the dialects, `r paste0("*b* = ", round(summary(eng_no_slope.lmer)$coefficients["r_System","Estimate"],3), ", *SE* = ",round(summary(eng_no_slope.lmer)$coefficients["r_System","Std. Error"],3),", t( ",round(summary(eng_no_slope.lmer)$coefficients["r_System","df"],3)," ) = ",round(summary(eng_no_slope.lmer)$coefficients["r_System","t value"],3), ", *p* = ", format(round(summary(eng_no_slope.lmer)$coefficients["r_System","Pr(>|t|)"],3), nsmall=3))`, but failed to reveal the match advantage, `r paste0("*p* = ", format(round(summary(eng_no_slope.lmer)$coefficients["MatchMISMATCHING","Pr(>|t|)"],3), nsmall=3) )`.  <!---Following @brauerLinearMixedeffectsModels2018, English dialects and data sources were numerically recoded. The best fitting ed model indicated that only data source (on-site vs. web-based) was significant, . <!---Although the match advantage of orientation was nonsignificant--->Also, this exploratory analysis indicated <!---the--->null interaction of orientation match condition and English dialects: `r paste0("*p* = ",format(round(summary(eng_no_slope.lmer)$coefficients["MatchMISMATCHING:r_System","Pr(>|t|)"],3), nsmall=3) )`  (see the detailed report in Appendix 4). 
+
+<!---
+Figure \@ref(fig:Eng-interaction-plot) showed the match advantages happened in the Internet data but only for American English.
+
+(Insert Figure \@ref(fig:Eng-interaction-plot) about here)
+--->
+
+```{r Eng-interaction-plot, eval=FALSE, fig.cap="Estimated", message=FALSE, warning=FALSE, include=FALSE}
+# Plot interaction
+
+sjPlot::plot_model(eng_no_slope.lmer, 
+                   type = "eff", 
+                   terms = c('Match','r_System' #'r_Source', ), 
+                   #ci.lvl = .95,
+                   se = TRUE,
+                   colors = "gs",
+                   show.legend = FALSE) +
+  ylab("Response Time(ms)") + 
+  labs(title = "",axis.title = "") + 
+  theme(panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        panel.background = element_blank(), 
+        strip.background = element_blank(),
+        strip.text = element_blank(),
+        axis.line = element_line(colour = "black"))
+```
+
+
+
+
+```{r GER_effect01_lme, message=FALSE, warning=FALSE, include=FALSE}
+##SP_V_GER_tidy$r_Source = if_else(SP_V_GER_tidy$Source == "Site",1,0)
+
+##TC_no_slope.lmer =lmer(response_time ~ Match*r_Source + (1|Subject) + (1|Target) + (1|PSA_ID), data = SP_V_TC_tidy)
+
+
+##TC_cor.lmer =lmer(response_time ~ Match*r_Source + (1|Subject) + (1|Target) + (r_Source|PSA_ID), data = SP_V_TC_tidy)
+
+##anova(TC_no_slope.lmer,TC_cor.lmer)    ## better fit: TC_no_slope.lmer
+
+GER_no_slope.lmer = lmerTest::lmer(response_time ~ Match + (1|Subject) + (1|Target) + (1|PSA_ID), control = lmerControl(optimizer = "bobyqa", optCtrl = list(maxfun = 1e6)),  data = SP_V_GER_tidy)
+
+
+## `r paste0("*b* = ", round(summary(GER_no_slope.lmer)$coefficients["r_Source","Estimate"],3), ", *SE* = ",round(summary(GER_no_slope.lmer)$coefficients["r_Source","Std. Error"],3),", t( ",round(summary(GER_no_slope.lmer)$coefficients["r_Source","df"],3)," ) = ",round(summary(GER_no_slope.lmer)$coefficients["r_Source","t value"],3), ", *p* < .001")`
+## `r paste0("*b* = ", round(summary(GER_no_slope.lmer)$coefficients["MatchMISMATCHING:r_Source","Estimate"],3), ", *SE* = ",round(summary(GER_no_slope.lmer)$coefficients["MatchMISMATCHING:r_Source","Std. Error"],3),", t( ",round(summary(GER_no_slope.lmer)$coefficients["MatchMISMATCHING:r_Source","df"],3)," ) = ",round(summary(GER_no_slope.lmer)$coefficients["MatchMISMATCHING:r_Source","t value"],3), ", *p* = ",round(summary(GER_no_slope.lmer)$coefficients["MatchMISMATCHING:r_Source","Pr(>|t|)"],3))`
+```
+
+
+
+We conducted another exploratory mixed-effect model on <!---Traditional Chinese---> German data because his was the only language to show a significant result in the preregistered meta-analysis. The best fit model had orientation match condition and data sources as the fixed effects. <!---This model indicated that data source was significant, ---> The match advantage of orientation was far from the significant level: `r paste0("*b* = ", round(summary(GER_no_slope.lmer)$coefficients["MatchMISMATCHING","Estimate"],3), ", *SE* = ",round(summary(GER_no_slope.lmer)$coefficients["MatchMISMATCHING","Std. Error"],3),", t( ",round(summary(GER_no_slope.lmer)$coefficients["MatchMISMATCHING","df"],3)," ) = ",round(summary(GER_no_slope.lmer)$coefficients["MatchMISMATCHING","t value"],3), ", *p* = ",format(round(summary(GER_no_slope.lmer)$coefficients["MatchMISMATCHING","Pr(>|t|)"],3)),nsmall=3)`<!---, and the interaction of match advantage and data sources was nonsignificant:---> (see the detailed report in Appendix 4). This result suggested that<!---Traditional Chinese---> German study could have a robust estimation in the circumstance multiple teams conducted the study in terms of one the same protocol. Combined with the previous results of <!---Traditional Chinese [@chenDoesObjectSize2020]--->German[@kosterMentalSimulationObject2018], future research on this language could explore any potential linguistic aspects that might result in the match advantage of object orientation<!--- and other properties--->. Although this study is unable to which aspects contributed to the results<!---provide further advice--->, the advantage for the future <!---Traditional Chinese--->language-specific studies would have<!---be---> a precise sample size justification on the participants and stimulus items.

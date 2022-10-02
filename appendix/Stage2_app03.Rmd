@@ -1,0 +1,266 @@
+---
+title: 'Appendix 3: Meta-analysis of match advantage by language'
+#tags: `PSA002`
+output: pdf_document
+header-includes:
+  - \usepackage{caption}
+  - \usepackage{float}
+  - \captionsetup[figure]{name=Figure S,labelsep = period}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(metafor)
+```
+
+
+
+
+```{r preparation, message=FALSE, warning=FALSE, include=FALSE}
+# Load lab information
+lab_info <-  dir(path = "..",full.names = TRUE, recursive = TRUE, include.dirs = TRUE, pattern = "Lab_info.csv")  %>%
+  read_csv()
+
+lab_fin <-dir(path = "..",full.names = TRUE, recursive = TRUE, include.dirs = TRUE, pattern = "lab_fin.csv")  %>%
+  read_csv()
+
+# Load outliers
+outliers_table <- read_csv(file = "includes/files/outliers_table.csv")
+
+# Load raw data 
+# Filter SP verification responses
+SP_V <-  dir(path = "..",
+      pattern = "all_rawdata_SP_V",   ## include in-site and internet data
+      recursive = TRUE, full.names = TRUE) %>% 
+      read_csv() %>%
+      subset(correct == 1 & Match != "F") %>%  ## Exclude the incorrect responses and filler trials
+      inner_join(select(lab_info, PSA_ID, Language), by = "PSA_ID") %>%
+    distinct() %>% ## Merge the language aspects
+    mutate(Language = ifelse(Language == "Magyar", "Hungrian", Language)) %>%  ## Switch "Magyar" to "Hungrian"
+    mutate(Source = if_else(opensesame_codename == "osweb","osweb","site"), 
+           Subject = paste0(Source,"_",PSA_ID,"_",subject_nr)) ## Compose the unique participant id
+```
+
+We conducted the respective meta-analysis for the language datasets of more than two laboratories collected at least 25 available participants' data. In addition to the Traditional Chinese, we illustrated the other 5 languages as below: English, German, Norway, Slovak and Turkey.
+
+
+```{r eng-meta, echo=FALSE, message=FALSE, warning=FALSE, fig.cap="Meta-analysis on match advantage of object orienation for English datasets."}
+## Locate English data for meta-analysis
+SP_V_en_meta_data <- SP_V %>%
+  filter(Language == "English") %>%
+  left_join(outliers_table, by=c("PSA_ID" = "LAB", "Subject" = "Subject")) %>%
+  filter(Outlier == FALSE) %>%  ## Reserve the included data in each lab
+  group_by(Language,PSA_ID,Subject,Match) %>%
+  summarise(RT = mean(response_time), ACC = 100*(sum(correct)/12)) %>%
+  pivot_wider(
+#    cols = Match:ACC,
+    names_from = Match,
+    values_from = c(RT,ACC)
+  ) %>%
+  group_by(Language,PSA_ID) %>%
+  summarise(m_match=median(RT_Y),m_mismatch=median(RT_N),
+            sd_match=sd(RT_Y),sd_mismatch=sd(RT_N),
+            acc_match=mean(ACC_Y),acc_mismatch=mean(ACC_N),
+            ni=n()) %>%
+  bind_cols(ri=.5) %>%
+  filter((ni > 25)) ## Exclude lab less than 25 participants
+
+## Prepare the elements for computing the meta-analytic effect size
+SP_V_en_es <- escalc(measure = "MC", 
+         m1i = m_mismatch, m2i = m_match, 
+         sd1i = sd_mismatch, sd2i = sd_match, 
+         ni = ni, ri = ri, 
+         slab = PSA_ID, data=SP_V_en_meta_data)
+
+## Compute the meta-analytic effect size
+SP_V_meta <-  rma.uni(yi, vi, data = SP_V_en_es, slab = PSA_ID, method = "REML", digits = 2)
+
+#png("Eng_meta_analysis.png")
+## Output the forest plot
+forest(SP_V_meta, mlab = "")
+#suppressMessages(dev.off())
+```
+
+
+```{r ger-meta, echo=FALSE, message=FALSE, warning=FALSE, fig.cap="Meta-analysis on match advantage of object orienation for German datasets."}
+## Locate English data for meta-analysis
+SP_V_ger_meta_data <- SP_V %>%
+  filter(Language == "German") %>%
+  left_join(outliers_table, by=c("PSA_ID" = "LAB", "Subject" = "Subject")) %>%
+  filter(Outlier == FALSE) %>%  ## Reserve the included data in each lab
+  group_by(Language,PSA_ID,Subject,Match) %>%
+  summarise(RT = mean(response_time), ACC = 100*(sum(correct)/12)) %>%
+  pivot_wider(
+#    cols = Match:ACC,
+    names_from = Match,
+    values_from = c(RT,ACC)
+  ) %>%
+  group_by(Language,PSA_ID) %>%
+  summarise(m_match=median(RT_Y),m_mismatch=median(RT_N),
+            sd_match=sd(RT_Y),sd_mismatch=sd(RT_N),
+            acc_match=mean(ACC_Y),acc_mismatch=mean(ACC_N),
+            ni=n()) %>%
+  bind_cols(ri=.5) %>%
+  filter((ni > 25)) ## Exclude lab less than 25 participants
+
+## Prepare the elements for computing the meta-analytic effect size
+SP_V_ger_es <- escalc(measure = "MC", 
+         m1i = m_mismatch, m2i = m_match, 
+         sd1i = sd_mismatch, sd2i = sd_match, 
+         ni = ni, ri = ri, 
+         slab = PSA_ID, data=SP_V_ger_meta_data)
+
+## Compute the meta-analytic effect size
+SP_V_meta <-  rma.uni(yi, vi, data = SP_V_ger_es, slab = PSA_ID, method = "REML", digits = 2)
+
+## Output the forest plot
+forest(SP_V_meta, mlab = "")
+```
+
+
+```{r nor-meta, echo=FALSE, message=FALSE, warning=FALSE, fig.cap="Meta-analysis on match advantage of object orienation for Norwegian datasets."}
+## Locate English data for meta-analysis
+SP_V_nor_meta_data <- SP_V %>%
+  filter(Language == "Norwegian") %>%
+  left_join(outliers_table, by=c("PSA_ID" = "LAB", "Subject" = "Subject")) %>%
+  filter(Outlier == FALSE) %>%  ## Reserve the included data in each lab
+  group_by(Language,PSA_ID,Subject,Match) %>%
+  summarise(RT = mean(response_time), ACC = 100*(sum(correct)/12)) %>%
+  pivot_wider(
+#    cols = Match:ACC,
+    names_from = Match,
+    values_from = c(RT,ACC)
+  ) %>%
+  group_by(Language,PSA_ID) %>%
+  summarise(m_match=median(RT_Y),m_mismatch=median(RT_N),
+            sd_match=sd(RT_Y),sd_mismatch=sd(RT_N),
+            acc_match=mean(ACC_Y),acc_mismatch=mean(ACC_N),
+            ni=n()) %>%
+  bind_cols(ri=.5) %>%
+  filter((ni > 25)) ## Exclude lab less than 25 participants
+
+## Prepare the elements for computing the meta-analytic effect size
+SP_V_nor_es <- escalc(measure = "MC", 
+         m1i = m_mismatch, m2i = m_match, 
+         sd1i = sd_mismatch, sd2i = sd_match, 
+         ni = ni, ri = ri, 
+         slab = PSA_ID, data=SP_V_nor_meta_data)
+
+## Compute the meta-analytic effect size
+SP_V_meta <-  rma.uni(yi, vi, data = SP_V_nor_es, slab = PSA_ID, method = "REML", digits = 2)
+
+## Output the forest plot
+forest(SP_V_meta, mlab = "")
+```
+
+
+```{r tc-meta, eval=FALSE, fig.cap="Meta-analysis", message=FALSE, warning=FALSE, include=FALSE}
+## Locate English data for meta-analysis
+SP_V_tc_meta_data <- SP_V %>%
+  filter(Language == "Traditional Chinese") %>%
+  left_join(outliers_table, by=c("PSA_ID" = "LAB", "Subject" = "Subject")) %>%
+  filter(Outlier == FALSE) %>%  ## Reserve the included data in each lab
+  group_by(Language,PSA_ID,Subject,Match) %>%
+  summarise(RT = mean(response_time), ACC = 100*(sum(correct)/12)) %>%
+  pivot_wider(
+#    cols = Match:ACC,
+    names_from = Match,
+    values_from = c(RT,ACC)
+  ) %>%
+  group_by(Language,PSA_ID) %>%
+  summarise(m_match=median(RT_Y),m_mismatch=median(RT_N),
+            sd_match=sd(RT_Y),sd_mismatch=sd(RT_N),
+            acc_match=mean(ACC_Y),acc_mismatch=mean(ACC_N),
+            ni=n()) %>%
+  bind_cols(ri=.5) %>%
+  filter((ni > 25)) ## Exclude lab less than 25 participants
+
+## Prepare the elements for computing the meta-analytic effect size
+SP_V_tc_es <- escalc(measure = "MC", 
+         m1i = m_mismatch, m2i = m_match, 
+         sd1i = sd_mismatch, sd2i = sd_match, 
+         ni = ni, ri = ri, 
+         slab = PSA_ID, data=SP_V_tc_meta_data)
+
+## Compute the meta-analytic effect size
+SP_V_meta <-  rma.uni(yi, vi, data = SP_V_tc_es, slab = PSA_ID, method = "REML", digits = 2)
+
+## Output the forest plot
+forest(SP_V_meta, mlab = "")
+
+```
+
+
+
+
+```{r slk-meta, echo=FALSE, message=FALSE, warning=FALSE, fig.cap="Meta-analysis on match advantage of object orienation for Slovak datasets."}
+## Locate English data for meta-analysis
+SP_V_slk_meta_data <- SP_V %>%
+  filter(Language == "Slovak") %>%
+  left_join(outliers_table, by=c("PSA_ID" = "LAB", "Subject" = "Subject")) %>%
+  filter(Outlier == FALSE) %>%  ## Reserve the included data in each lab
+  group_by(Language,PSA_ID,Subject,Match) %>%
+  summarise(RT = mean(response_time), ACC = 100*(sum(correct)/12)) %>%
+  pivot_wider(
+#    cols = Match:ACC,
+    names_from = Match,
+    values_from = c(RT,ACC)
+  ) %>%
+  group_by(Language,PSA_ID) %>%
+  summarise(m_match=median(RT_Y),m_mismatch=median(RT_N),
+            sd_match=sd(RT_Y),sd_mismatch=sd(RT_N),
+            acc_match=mean(ACC_Y),acc_mismatch=mean(ACC_N),
+            ni=n()) %>%
+  bind_cols(ri=.5) %>%
+  filter((ni > 25)) ## Exclude lab less than 25 participants
+
+## Prepare the elements for computing the meta-analytic effect size
+SP_V_slk_es <- escalc(measure = "MC", 
+         m1i = m_mismatch, m2i = m_match, 
+         sd1i = sd_mismatch, sd2i = sd_match, 
+         ni = ni, ri = ri, 
+         slab = PSA_ID, data=SP_V_slk_meta_data)
+
+## Compute the meta-analytic effect size
+SP_V_meta <-  rma.uni(yi, vi, data = SP_V_slk_es, slab = PSA_ID, method = "REML", digits = 2)
+
+## Output the forest plot
+forest(SP_V_meta, mlab = "")
+```
+
+
+```{r tur-meta, echo=FALSE, message=FALSE, warning=FALSE, fig.cap="Meta-analysis on match advantage of object orienation for Turkish datasets."}
+## Locate English data for meta-analysis
+SP_V_tur_meta_data <- SP_V %>%
+  filter(Language == "Turkish") %>%
+  left_join(outliers_table, by=c("PSA_ID" = "LAB", "Subject" = "Subject")) %>%
+  filter(Outlier == FALSE) %>%  ## Reserve the included data in each lab
+  group_by(Language,PSA_ID,Subject,Match) %>%
+  summarise(RT = mean(response_time), ACC = 100*(sum(correct)/12)) %>%
+  pivot_wider(
+#    cols = Match:ACC,
+    names_from = Match,
+    values_from = c(RT,ACC)
+  ) %>%
+  group_by(Language,PSA_ID) %>%
+  summarise(m_match=median(RT_Y),m_mismatch=median(RT_N),
+            sd_match=sd(RT_Y),sd_mismatch=sd(RT_N),
+            acc_match=mean(ACC_Y),acc_mismatch=mean(ACC_N),
+            ni=n()) %>%
+  bind_cols(ri=.5) %>%
+  filter((ni > 25)) ## Exclude lab less than 25 participants
+
+## Prepare the elements for computing the meta-analytic effect size
+SP_V_tur_es <- escalc(measure = "MC", 
+         m1i = m_mismatch, m2i = m_match, 
+         sd1i = sd_mismatch, sd2i = sd_match, 
+         ni = ni, ri = ri, 
+         slab = PSA_ID, data=SP_V_tur_meta_data)
+
+## Compute the meta-analytic effect size
+SP_V_meta <-  rma.uni(yi, vi, data = SP_V_tur_es, slab = PSA_ID, method = "REML", digits = 2)
+
+## Output the forest plot
+forest(SP_V_meta, mlab = "")
+```

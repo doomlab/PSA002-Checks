@@ -1,0 +1,256 @@
+---
+title: 'Appendix 4: Mixed-effect models of match advantages'
+#tags: `PSA002`
+output: html_document
+#header-includes:
+#  - \usepackage{caption}
+#  - \usepackage{float}
+#  - \captionsetup[table]{name=Table S,labelsep = period}
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(lme4)
+library(lmerTest)
+library(ggplot2)
+library(sjPlot)
+
+# Import multiple-bytes string in English system
+Sys.setlocale("LC_ALL","English") 
+```
+
+
+
+
+```{r load_info, message=FALSE, warning=FALSE, include=FALSE}
+# Load lab information
+lab_info <- ##dirname(getwd()) %>%
+  dir(path = "..",full.names = TRUE, recursive = TRUE, include.dirs = TRUE, pattern = "Lab_info.csv")  %>%
+  read_csv()
+
+lab_fin <- ##dirname(getwd()) %>%
+  dir(path = "..",full.names = TRUE, recursive = TRUE, include.dirs = TRUE, pattern = "lab_fin.csv")  %>%
+  read_csv()
+
+# Load meta data of in site data: age, female numbers
+
+insite_meta <- dir(path = "..",full.names = TRUE, recursive = TRUE, include.dirs = TRUE, pattern = "insite_meta.csv") %>%
+  read_csv() 
+
+# Load and summary meta data of online data: age, female numbers, language proficiency
+osweb_meta <- dir(path = "..",full.names = TRUE, recursive = TRUE, include.dirs = TRUE, pattern = "jatos_meta.csv") %>%
+  read_csv() %>%
+  mutate(gender = ifelse(gender==1,"FEMALE",ifelse(gender==2,"MALE","OTHER"))) %>%
+  mutate(birth_year = as.numeric(birth_year)) %>%
+  mutate(year = ifelse(birth_year > 21 & !is.na(birth_year), 1900 + birth_year, 2000 + birth_year)) %>%
+  mutate(age = ifelse(!is.na(year),2021-year,NA)) %>%
+  group_by(Batch) %>%
+  summarise(N = n(), Female_N = sum(gender=="FEMALE",na.rm = TRUE), Age = round(mean(age, na.rm=TRUE),0), Proficiency = round(mean(lang_prof),0) )
+
+SP_V <-  dir(path = "..",
+      pattern = "all_rawdata_SP_V",   ## include in-site and internet data
+      recursive = TRUE, full.names = TRUE) %>% 
+      read_csv() %>%
+      subset(correct == 1 & Match != "F") %>%  ## Exclude the incorrect responses and filler trials
+      inner_join(select(lab_info, PSA_ID, Language), by = "PSA_ID") %>%
+    distinct() %>% ## Merge the language aspects
+    mutate(Language = ifelse(Language == "Magyar", "Hungarian", Language)) %>%  ## Switch "Magyar" to "Hungrian"
+    mutate(Language = ifelse(Language == "Simple Chinese", "Simplified Chinese", Language)) %>%  ## Switch "Simple Chinese" to "Simplified Chinese"
+    mutate(Source = if_else(opensesame_codename == "osweb","osweb","site"), 
+           Subject = paste0(Source,"_",PSA_ID,"_",subject_nr)) ## Compose the unique participant id
+
+```
+
+
+
+```{r outlier-check, message=FALSE, warning=FALSE, include=FALSE, paged.print=TRUE}
+get_intercept <- function(set) {
+  #Subject = as.factor(subset(SP_V_tidy,PSA_ID == LAB_ID)$Subject) %>% levels() %>% as.numeric()
+  
+# Source = as.factor(subset(SP_V_tidy,PSA_ID == LAB_ID)$Source) %>% levels() %>% as.numeric()
+
+ #Subject = paste(Source,"_",subject_nr)
+ 
+  t <- cbind(#Source,
+             #subject_nr,
+             Subject = levels(as.factor(set$Subject)),
+             (lmer(response_time ~ Match + (1|Subject), data = set) %>%
+  coef())$Subject %>%
+      as.tibble()%>%
+  mutate(Outlier = `(Intercept)` > quantile(`(Intercept)`,probs=.75))
+    )
+  
+  return(t)
+}
+
+LABS <- unique(SP_V$PSA_ID)
+
+outliers_table <- NULL
+for(lab_id in LABS){
+  outliers_table<- get_intercept( subset(SP_V,PSA_ID == lab_id)) %>%
+    mutate(LAB = lab_id) %>%
+    rbind(outliers_table)
+}
+```
+
+```{r SP-lme-data, message=FALSE, warning=FALSE, include=FALSE}
+# export data file for the making of appendix
+SP_V_lme_data <- dir(path = "..",
+      pattern = "SP_V_lme_data.csv",   ## include in-site and internet data
+      recursive = TRUE, full.names = TRUE) %>% 
+      read_csv() %>%
+  inner_join(subset(outliers_table, Outlier == FALSE),by = c("Subject","PSA_ID" = "LAB"))
+
+SP_V_lme_data$Language <- ifelse(SP_V_lme_data$Language == "Magyar","Hungarian",SP_V_lme_data$Language) 
+SP_V_lme_data$Language <- ifelse(SP_V_lme_data$Language ==  "Simple Chinese", "Simplified Chinese", SP_V_lme_data$Language)
+
+SP_V_lme_data <- mutate(SP_V_lme_data,
+                        Match = factor(Match,
+                          levels = c("Y","N"),
+                          labels = c("MATCHING","MISMATCHING")),
+                        Source = factor(Source, 
+                       levels = c("site","osweb"),
+                       labels = c("Site","Internet") ))
+```
+
+### Planned analysis: Matching was the only one independent variable
+
+1. The model with four random effects: participants, targets, laboratories, and languages.
+
+
+```{r SP_effect01_lme, message=FALSE, warning=FALSE, results='asis'}
+SP_all_random.lmer = lmer(response_time ~ Match + (1|Subject) + (1|Target) + (1|PSA_ID) + (1|Language), data = SP_V_lme_data) ## build mixed-effects regression
+
+tab_model(SP_all_random.lmer, title = "Coefficients")
+```
+
+2. The model excluded the targets and languages from the random effect structure. The final report decided `SP_reduced_random.lmer` the best fitted model.
+
+```{r SP_effect02_lme, message=FALSE, warning=FALSE}
+SP_reduced_random.lmer = lmerTest::lmer(response_time ~ Match + (1|Subject) + (1|PSA_ID), data = SP_V_lme_data)
+SP_slope_nocor_reduced_random.lmer = lmer(response_time ~ Match + (1|Subject) + (Match||PSA_ID), data = SP_V_lme_data)
+SP_slope_cor_reduced_random.lmer = lmer(response_time ~ Match + (1|Subject) + (Match|PSA_ID), data = SP_V_lme_data)
+
+tab_model(SP_reduced_random.lmer)
+tab_model(SP_slope_nocor_reduced_random.lmer)
+tab_model(SP_slope_cor_reduced_random.lmer)
+```
+
+
+### Models included data source
+
+We evaluated the interaction of match advantage and data collection sources in three models. Based on the recommended practices(Barr et al., 2013; Brauer & Curtin, 2018), the models used the optimizer `bobyqa`. The final report decided `source_cor.lmer` the best fitted model.
+
+```{r SP_source_lme, message=FALSE, warning=FALSE, cache=TRUE}
+## standardized
+SP_V_lme_data$r_Source = if_else(SP_V_lme_data$Source == "Site",1,0)
+
+source_zero_slope_nocor.lmer =lmer(response_time ~ Match*r_Source + (1|Subject) + (1|PSA_ID) + (1|Language), 
+  control = lmerControl(optimizer = "bobyqa",
+                        optCtrl = list(maxfun = 1e6)), data = SP_V_lme_data)
+
+
+source_nocor.lmer =lmer(response_time ~ Match*r_Source + (1|Subject) + (r_Source||PSA_ID) + (r_Source||Language), 
+  control = lmerControl(optimizer = "bobyqa",
+                        optCtrl = list(maxfun = 1e6)), 
+   data = SP_V_lme_data)
+
+source_cor.lmer =lmer(response_time ~ Match*r_Source + (1|Subject) + (r_Source|PSA_ID) + (r_Source|Language), 
+  control = lmerControl(optimizer = "bobyqa",
+                        optCtrl = list(maxfun = 1e6)), 
+                        data = SP_V_lme_data)
+
+tab_model(source_zero_slope_nocor.lmer)
+
+tab_model(source_nocor.lmer)
+
+tab_model(source_cor.lmer)
+
+```
+
+
+### Models included languages 
+
+
+We analyzed the interactions by the data sources separately.
+
+#### on site data
+
+
+We evaluated the interaction of match advantage and languagess in three models. Based on the recommended practices(Barr et al., 2013; Brauer & Curtin, 2018), the models used the optimizer `bobyqa`. The final report decided `lang_cor.lmer` the best fitted model.
+
+```{r SP_lang_site_lme, message=FALSE, warning=FALSE}
+## Check sample size of a language by site data
+site_excluded_lang <- subset(SP_V_lme_data, Source=="Site") %>%
+  group_by(Language, Subject) %>%
+  summarise(N_trials = n()) %>%
+  group_by(Language) %>%
+  summarise(N = n()) %>%
+  filter(N < 25) %>%
+  pull(Language)
+
+## Allocate the site data
+SP_V_lang_lme_data = subset(SP_V_lme_data, Source=="Site" & !(Language %in% site_excluded_lang))
+
+## Run the mixed effect model by site data
+lang_cor.lmer =lmer(response_time ~ Language*Match + (1|Subject), 
+  control = lmerControl(optimizer = "bobyqa",
+                        optCtrl = list(maxfun = 1e6)), 
+  data = SP_V_lang_lme_data)
+
+lang_slope_nocor.lmer =lmer(response_time ~ Language*Match + (Match||Subject), 
+  control = lmerControl(optimizer = "bobyqa",
+                        optCtrl = list(maxfun = 1e6)), data = SP_V_lang_lme_data)
+
+lang_slope_cor.lmer =lmer(response_time ~ Language*Match + (Match|Subject), 
+  control = lmerControl(optimizer = "bobyqa",
+                        optCtrl = list(maxfun = 1e6)), data = SP_V_lang_lme_data)
+
+
+tab_model(lang_cor.lmer)  
+tab_model(lang_slope_nocor.lmer)
+tab_model(lang_slope_cor.lmer)
+```
+
+
+#### web-based data
+
+
+We evaluated the interaction of match advantage and languagess in three models. Based on the recommended practices(Barr et al., 2013; Brauer & Curtin, 2018), the models used the optimizer `bobyqa`. The final report decided `osweb_cor.lmer` the best fitted model.
+
+
+```{r SP_lang_osweb_lme, message=FALSE, warning=FALSE, cache=TRUE}
+## Check sample size of a language by osweb data
+osweb_excluded_lang <- subset(SP_V_lme_data, Source=="Internet") %>%
+  group_by(Language, Subject) %>%
+  summarise(N_trials = n()) %>%
+  group_by(Language) %>%
+  summarise(N = n()) %>%
+  filter(N < 25) %>%
+  pull(Language)  ## Exclude the languages less than 25 participants
+
+## Allocate the osweb data
+SP_V_osweb_lme_data = subset(SP_V_lme_data, Source=="Internet" & !(Language %in% osweb_excluded_lang))
+
+
+## Run the mixed effect model by site data
+osweb_cor.lmer = lmerTest::lmer(response_time ~ Language*Match + (1|Subject), 
+  control = lmerControl(optimizer = "bobyqa",
+                        optCtrl = list(maxfun = 1e6)), # Increase maximum number of iterations to facilitate model convergence , 
+        data = SP_V_osweb_lme_data)
+
+osweb_slope_nocor.lmer =lmer(response_time ~ Language*Match + (Match||Subject), 
+  control = lmerControl(optimizer = "bobyqa",
+        optCtrl = list(maxfun = 1e6)), data = SP_V_osweb_lme_data)
+
+osweb_slope_cor.lmer =lmer(response_time ~ Language*Match + (Match|Subject), 
+  control = lmerControl(optimizer = "bobyqa",
+        optCtrl = list(maxfun = 1e6)), data = SP_V_osweb_lme_data)
+
+
+tab_model(osweb_cor.lmer)
+tab_model(osweb_slope_nocor.lmer)
+tab_model(osweb_slope_cor.lmer)
+```

@@ -1,0 +1,616 @@
+
+
+```{r functions_pak02, message=FALSE, warning=FALSE, include=FALSE}
+## Turn initial letter to upper style.
+firstup <- function(x) {
+  substr(x, 1, 1) <- toupper(substr(x, 1, 1))
+  x
+}
+```
+
+
+
+# Results
+
+Among the `r format(sum(Raw_total$N), scientific=FALSE, big.mark = ",")` available participants(`r format(sum(Raw_total$N) - sum(Raw_total$N_web), scientific=FALSE, big.mark = ",")` onsite; `r format(sum(Raw_total$N_web), scientific=FALSE, big.mark = ",")` online), `r sum(Raw_total$N_excluded)` participants had an accuracy percentage below 70%. According to the preregistered plan, the analyses excluded these participants’ data.[^5]
+
+
+[^5]: Low-accurate participants distributed across `r dim(subset(Raw_total, N_excluded != 0))[1]` laboratories. "ARE_001" has 41 participants. "NZL_005" has 8 participants. The other laboratories have 1 ~ 5 participants.
+
+## Intra-lab analysis during data collection
+
+Before data collection, each lab decided whether they wanted to apply a sequential analysis [@schonbrodtSequentialHypothesisTesting2017] or whether they wanted to settle for a fixed sample size. The preregistered protocol for labs applying sequential analysis established that they could stop data collection upon reaching the preregistered criterion ($BF_{10} = 10\ or\ -10$), or the maximal sample size. Each laboratory chose a fixed sample size and an incremental _n_ for sequential analysis before their data collection. Two laboratories (HUN 001, TWN 001) stopped data collection at the preregistered criterion, $BF_{10} = -10$. Fourteen laboratories did not finish the sequential analysis because (1) twelve laboratories were interrupted by the pandemic outbreak; (2) two laboratories (TUR_007E, TWN_002E) recruited English-speaking participants for institutional policies. Lab-based records were reported on a public website as each laboratory completed data collection (details are available in Appendix 3).
+
+
+## Inter-lab analysis of final data
+
+
+```{r cycle_outlier_check, message=FALSE, warning=FALSE, include=FALSE}
+## Technically this chunk is unavailable. 
+## To compute the available N in terms of old preregistered criterion.
+get_intercept <- function(set) {
+  t <- cbind(
+             Subject = levels(as.factor(set$Subject)),
+             (lmer(response_time ~ Match + (1|Subject), data = set) %>%
+  coef())$Subject %>%
+      as_tibble()%>%
+  mutate(#LowerBound = quantile(`(Intercept)`,probs=.25),
+         #UpperBound = quantile(`(Intercept)`,probs=.75),
+         Mark = 
+           (`(Intercept)` > quantile(`(Intercept)`,probs=.75)) | (`(Intercept)` < quantile(`(Intercept)`,probs=.25)) )
+    ) ## We should exclude the unusual fastest responses
+  
+  return(t)
+}
+
+LABS <- unique(SP_V_tidy$PSA_ID)
+
+## Marks outliers by lme
+
+outliers_marks <- NULL
+for(lab_id in LABS){
+  outliers_marks<- get_intercept( subset(SP_V_tidy,PSA_ID == lab_id)) %>%
+    mutate(LAB = lab_id) %>%
+    rbind(outliers_marks)
+}
+
+
+## Erin's revised outliers table are by MAD. The codes after this chunk can not access this table
+
+outliers_table <- SP_V_tidy %>% 
+    group_by(PSA_ID) %>% 
+    summarize(total_n = length(unique(Subject)), 
+              total_data = n(), 
+              total_outliers = sum(Outlier == T), 
+              prop = round(total_outliers / total_data, 2))
+
+```
+
+```{r N-computations, echo=FALSE, message=FALSE, warning=FALSE, paged.print=TRUE}
+
+## Count the available participants
+Prereg_N <- SP_V_tidy %>% 
+  left_join(outliers_marks, by=c("PSA_ID" = "LAB", "Subject" = "Subject")) %>% 
+  filter(Mark == FALSE) %>% ## Outlier by intercept
+  group_by(PSA_ID, Subject) %>%
+  summarise(N = n()) %>%
+  group_by(PSA_ID) %>%
+  summarise(Lab_N = n()) #%>%
+  #summarise(Total = sum(Lab_N))
+
+MAD_N <- SP_V_tidy %>% 
+#  left_join(outliers_marks, by=c("PSA_ID" = "LAB", "Subject" = "Subject")) %>% 
+  filter(Outlier == FALSE) %>% ## Outlier by MAD
+  group_by(PSA_ID, Subject) %>%
+  summarise(N = n()) %>%
+  group_by(PSA_ID) %>%
+  summarise(Lab_N = n()) 
+```
+
+```{r summary-languages, echo=FALSE, message=FALSE, warning=FALSE, paged.print=TRUE}
+# Summarize the participants' accuracy by language
+SP_V_tidy %>% 
+  group_by(Language, Subject) %>%
+  summarise(subject_ACC = sum(correct)/24) %>%
+  group_by(Language) %>%
+  summarise(N = n(), mean_ACC = round(mean(subject_ACC)*100)) %>% 
+  left_join(
+# note that V_RT is before outliers and percent correct, subject_M is after both 
+SP_V_tidy %>% 
+  filter(Outlier == FALSE) %>% ## Outlier by MAD
+  group_by(Language, Subject, Match) %>%
+  summarise(subject_M = median(response_time)) %>%
+  group_by(Language, Match) %>%
+  summarise(med_RT = median(subject_M), MAD_RT = mad(subject_M)) %>%
+  pivot_wider(names_from = Match, values_from = c(med_RT, MAD_RT)) %>%
+  mutate(Effect = (med_RT_N - med_RT_Y) ) %>%
+  transmute( Mismatch_stat = paste0(round(med_RT_N),"(",format(round(MAD_RT_N,digits=2),nsmall=2),")"),
+             Match_stat = paste0(round(med_RT_Y),"(",format(round(MAD_RT_Y,digits=2),nsmall=2),")"),
+             Effect = Effect) %>%
+##  mutate(Source = if_else(Source=="osweb","Internet","Site")) %>%
+##  arrange(desc(Source)) %>%
+  arrange(desc(Language)),
+  by=c("Language") ) %>%
+  kable(  
+    format = "latex",
+    booktabs = TRUE,
+    escape=FALSE,
+    col.names = c("Language","N","Accuracy Percentages","Mismatching","Matching","Match Advantage"),
+    align = c("l","l","r","r","r","r"),
+   caption = "Descriptive statistics by language: Total sample size, Average accuracy percentage, Median response times and median absolute deviations (in parentheses) per match condition (Mismatching, Matching); Match advantage (difference in response times)."
+    )
+```
+
+
+
+**Identification of outliers.** Our preregistered plan included excluding outliers based on a linear mixed-model analysis for participants in the third quantile of the grand intercept (i.e., participants with the longest average response times). Only `r round(100*sum(Prereg_N$Lab_N)/(sum(sum_site$SP_N) + sum(sum_osweb$SP_N)),2)` % of participants' data could pass this criterion. After examining the data from both online and in-person data collection, it became clear that both a minimum response latency and maximum response latency should be employed, as improbable times existed at both ends of the distribution [@kvalsethHickLawEquivalent2021; @proctorHickLawChoice2018]. The maximum response latency was calculated as two times the mean absolute deviation plus the median calculated separately for each participant. Two participants’ data were excluded becauseif they did not fall between the acceptable minimum (160 ms) and maximum response time range (participant’s median response time plus 2 median absolute deviation).
+
+(Insert Table \@ref(tab:summary-languages) about here )
+
+
+
+```{r meta_setup, message=FALSE, warning=FALSE, include=FALSE}
+## Prepare the data sets for the meta analysis
+## Split the sources
+SP_V_split_data <- SP_V_tidy %>% 
+  left_join(outliers_marks, by=c("PSA_ID" = "LAB", "Subject" = "Subject")) %>%
+  filter(Outlier == FALSE) %>%  ## Reserve the included data in each lab (by MAD); No siginficant overall effect if this criterion was unavailable. 
+  filter(Acc_bound == FALSE) %>% ## Exclude SPV Acc < .70
+  group_by(Language, Source, Subject, Match) %>%
+  summarize(RT = median(response_time), ACC = mean(correct)) %>%
+  pivot_wider(
+    names_from = Match,
+    values_from = c(RT,ACC)
+  ) %>%
+  group_by(Language, Source) %>%
+  summarise(m_match=median(RT_Y,na.rm=TRUE),m_mismatch=median(RT_N,na.rm=TRUE),
+            sd_match=sd(RT_Y,na.rm=TRUE),sd_mismatch=sd(RT_N,na.rm=TRUE),
+            acc_match=mean(ACC_Y,na.rm=TRUE),acc_mismatch=mean(ACC_N,na.rm=TRUE),
+            ni=n()) %>%
+  bind_cols(ri=.5)
+
+## Merge the sources
+SP_V_meta_data <- SP_V_tidy %>% 
+  left_join(outliers_marks, by=c("PSA_ID" = "LAB", "Subject" = "Subject")) %>%
+  filter(Outlier == FALSE) %>%  ## Reserve the included data in each lab (by MAD); No siginficant overall effect if this criterion was unavailable. 
+  filter(Acc_bound == FALSE) %>% ## Exclude SPV Acc < .70
+  group_by(Language, PSA_ID, Subject,Match) %>%
+  summarize(RT = median(response_time), ACC = mean(correct)) %>%
+  pivot_wider(
+    names_from = Match,
+    values_from = c(RT,ACC)
+  ) %>%
+  group_by(Language,PSA_ID) %>%
+  summarise(m_match=median(RT_Y,na.rm=TRUE),m_mismatch=median(RT_N,na.rm=TRUE),
+            sd_match=sd(RT_Y,na.rm=TRUE),sd_mismatch=sd(RT_N,na.rm=TRUE),
+            acc_match=mean(ACC_Y,na.rm=TRUE),acc_mismatch=mean(ACC_N,na.rm=TRUE),
+            ni=n()) %>%
+  bind_cols(ri=.5)
+```
+
+
+
+```{r meta-sources, echo=FALSE, message=FALSE, warning=FALSE, paged.print=TRUE, fig.cap="Meta-analysis on match advantage of object orientation for all datasets"}
+
+
+source("includes/files/meta_sources_plot.R")
+
+```
+
+
+```{r meta-all, echo=FALSE, message=FALSE, warning=FALSE, paged.print=TRUE, fig.cap="Meta-analysis on match advantage of object orientation for all datasets"}
+
+
+source("includes/files/meta_all_plot.R")
+
+```
+
+
+**Meta-analysis of match advantages across laboratories.** Because the preregistered analysis plan did not consider the data collected online, we conducted the alternative meta-analysis for the dataset that separated the data collection sources into two groups and the planned meta-analyses for the complete dataset that merged data collection sources. The alternative meta-analysis merged the laboratory data in each language. Figure \@ref(fig:meta-sources) summarized the overall effect and the meta-analytic effects separated by the data collection source. Although the meta-analysis of online data showed a non-zero effect (*b* = `r as.character(round(SP_V_meta_osweb$b,2))`, 95% CI [`r as.character(round(SP_V_meta_osweb$ci.lb,2))`, `r as.character(round(SP_V_meta_osweb$ci.ub,2))`]), the overall effect was marginal (*b* = `r as.character(round(SP_V_meta_sources$b,2))`, 95% CI [`r as.character(round(SP_V_meta_sources$ci.lb,2))`, `r as.character(round(SP_V_meta_sources$ci.ub,2))`]). The planned meta-analysis grouped the languages that had at least two laboratories and computed the langage-specific meta-analytic effect (Arabic, English, German, Norway, Simplified Chinese, Traditional Chinese, Slovak, and Turkey). Figure \@ref(fig:meta-all) showed a significant meta-analytic effect across German laboratories (*b* = `r as.character(round(res.Germany$b,2))`, 95% CI [`r as.character(round(res.Germany$ci.lb,2))`, `r as.character(round(res.Germany$ci.ub,2))`]) and revealed the significant overall effect (*b* = `r as.character(round(SP_V_meta_all$b,2))`, 95% CI [`r as.character(round(SP_V_meta_all$ci.lb,2))`, `r as.character(round(SP_V_meta_all$ci.ub,2))`]). 
+
+
+(Insert Figure \@ref(fig:meta-sources) about here)
+
+
+(Insert Figure \@ref(fig:meta-all) about here)
+
+
+
+```{r SP-lme-data, message=FALSE, warning=FALSE, include=FALSE}
+
+SP_V_lme_data <- SP_V_tidy %>% 
+   filter(Outlier == FALSE) %>%  ## excluded outliers by MAD
+  filter(Acc_bound == FALSE) %>% # remove people who were less than 70% so they don't match with join
+  mutate(Match = factor(Match,
+                        levels = c("Y","N"),
+                        labels = c("MATCHING","MISMATCHING")),
+                        Source = factor(Source, 
+                        levels = c("site","osweb"),
+                        labels = c("Site","Internet") ))
+
+# Export data for app4
+write_csv(SP_V_tidy, file="includes/files/SP_V_lme_data.csv")
+```
+
+
+```{r SP-lang-lme, message=FALSE, warning=FALSE}
+
+## Erin's update
+
+# Null effect models
+#only intercept
+intercept.model <- lm(response_time ~ 1, 
+                      data = SP_V_lme_data)
+#add random intercept of subject
+subject.model <- lmer(response_time ~ 1 + (1|Subject), 
+                      control = lmerControl(optimizer = "bobyqa",
+                                            optCtrl = list(maxfun = 1e6)), 
+                      data = SP_V_lme_data)
+# add random intercept of item
+item.model <- lmer(response_time ~ 1 + (1|Subject) + (1|Target), 
+                      control = lmerControl(optimizer = "bobyqa",
+                                            optCtrl = list(maxfun = 1e6)), 
+                      data = SP_V_lme_data)
+# add random intercept of lab
+lab.model <- lmer(response_time ~ 1 + (1|Subject) + (1|Target) + (1|PSA_ID), 
+                      control = lmerControl(optimizer = "bobyqa",
+                                            optCtrl = list(maxfun = 1e6)), 
+                      data = SP_V_lme_data)
+
+# add random intercept of language
+language.model <- lmer(response_time ~ 1 + (1|Subject) + (1|Target) + (1|PSA_ID) + (1|Language), 
+                      control = lmerControl(optimizer = "bobyqa",
+                                            optCtrl = list(maxfun = 1e6)), 
+                      data = SP_V_lme_data)
+
+## which is best fit
+#AIC(subject.model) < AIC(intercept.model)  ## TRUE
+#AIC(item.model) < AIC(subject.model)       ## TRUE
+#AIC(lab.model) < AIC(item.model)           ## TRUE
+#AIC(language.model) < AIC(lab.model)       ## TRUE
+section_01_AIC <- AIC(language.model) ## presentation in Result
+
+section_01_BIC <- BIC(language.model)
+
+## language.model is the best fittest model
+
+# add fixed effect of match0
+fixed.two.model <- lmer(response_time ~ Match + (1|Subject) + (1|Target) , 
+                      control = lmerControl(optimizer = "bobyqa",
+                                            optCtrl = list(maxfun = 1e6)), 
+                      data = SP_V_lme_data)
+
+fixed.three.model <- lmer(response_time ~ Match + (1|Subject) + (1|Target) + (1|PSA_ID) , 
+                      control = lmerControl(optimizer = "bobyqa",
+                                            optCtrl = list(maxfun = 1e6)), 
+                      data = SP_V_lme_data)
+
+
+fixed.four.model <- lmer(response_time ~ Match + (1|Subject) + (1|Target) + (1|PSA_ID) + (1|Language) , 
+                      control = lmerControl(optimizer = "bobyqa",
+                                            optCtrl = list(maxfun = 1e6)), 
+                      data = SP_V_lme_data)
+
+#AIC(fixed.four.model) < AIC(fixed.two.model) ## TRUE
+#AIC(fixed.four.model) < AIC(fixed.three.model) ## TRUE
+section_02B_AIC <- AIC(fixed.four.model) ## presentation in Result
+section_02B_BIC <- BIC(fixed.four.model) ## fixed.four.model with Match is the fittest model
+
+
+
+model_test01 <- round(unlist(anova(language.model, fixed.four.model)),3)[c("npar1","npar2","Chisq2","Pr(>Chisq)2")] ## present in the text
+
+## Exploratory analysis
+
+fixed.randomslope.model <- lmer(response_time ~ Match + (1|Subject) + (1|Target) +(1|PSA_ID) + (1 + Match|Language), 
+                      control = lmerControl(optimizer = "bobyqa",
+                                            optCtrl = list(maxfun = 1e6)), 
+                      data = SP_V_lme_data)
+
+
+#AIC(fixed.randomslope.model) < AIC(fixed.four.model)  ## FALSE
+#AIC(fixed.randomslope.model) < AIC(item.model)   ## TRUE
+#AIC(fixed.randomslope.model) < AIC(language.model)  ## TRUE
+
+section_03_AIC <- AIC(fixed.randomslope.model) ## presentation in Result
+section_03_BIC <- BIC(fixed.randomslope.model) ## presentation in Result
+
+
+
+model_test02 <- round(unlist(anova(language.model, fixed.randomslope.model)),3)[c("npar1","npar2","Chisq2","Pr(>Chisq)2")] ## present in the text
+
+
+#section_03_AIC < section_02B_AIC ## fixed.four.model is better fit than fixed.raondomslope.model
+
+
+## Export the stat info in the article
+SP_lme01_out <- round(summary(fixed.four.model)$coefficients["MatchMISMATCHING",],3) ## This was the best fit.
+SP_lme02_out <- round(summary(fixed.randomslope.model)$coefficients["MatchMISMATCHING",],3)
+```
+
+
+**Evaluating match advantages using linear mixed-effects models.** As with the analysis plan, the null-effect model of sentence-picture verification data converged at all random intercept factors: participants, items, laboratories, and languages, AIC = `r format(section_01_AIC, big_mark=",")`, BIC = `r format(section_01_BIC, big_mark=",")`; the fixed-effect model either converged at all random intercept factors, AIC = `r format(section_02_AIC, big_mark=",")`, BIC = `r format(section_02_BIC, big_mark=",")`. The fixed-effect model was not significantly different form the null-effect model,  ${\chi}^2$ `r paste0("(",model_test01[1],",",model_test01[2],") = ",model_test01[3], ", *p* = ", model_test01[4])`, and did not reveal a significant effect of match advantage: `r paste0("*b* = ", SP_lme01_out["Estimate"], ", *SE* = ",SP_lme01_out["Std. Error"],", t(",SP_lme01_out["df"],") = ",SP_lme01_out["t value"], ", *p* = ",SP_lme01_out["Pr(>|t|)"])`. The exploratory analysis evaluated the model with highest theoretical interest that had a random slope of matching condition on language. This model converged at the random intercepts of participants, items, laboratories, and matching conditions on language, AIC = `r format(section_03_AIC, big_mark=",")`, BIC = `r format(section_03_BIC, big_mark=",")`. This model was not significant different from the null-effect model, ${\chi}^2$ `r paste0("(",model_test02[1],",",model_test02[2],") = ",model_test02[3], ", *p* = ", model_test02[4])`, and showed no significant effect of match advantage: `r paste0("*b* = ", SP_lme02_out["Estimate"], ", *SE* = ",SP_lme02_out["Std. Error"],", t(",SP_lme02_out["df"],") = ",SP_lme02_out["t value"], ", *p* = ",SP_lme02_out["Pr(>|t|)"])`. 
+
+
+```{r SP-ger-lme, message=FALSE, warning=FALSE}
+#null-effect model without random intercepts
+german.intercept.model <- lm(response_time ~ 1, 
+                      data = subset(SP_V_lme_data,Language == "German"))
+#add random intercept of subject
+german.subject.model <- lmer(response_time ~ 1 + (1|Subject), 
+                      control = lmerControl(optimizer = "bobyqa",
+                                            optCtrl = list(maxfun = 1e6)), 
+                      data = subset(SP_V_lme_data,Language == "German"))
+# add random intercept of item
+german.item.model <- lmer(response_time ~ 1 + (1|Subject) + (1|Target), 
+                      control = lmerControl(optimizer = "bobyqa",
+                                            optCtrl = list(maxfun = 1e6)), 
+                      data = subset(SP_V_lme_data,Language == "German"))
+# add random intercept of lab
+german.lab.model <- lmer(response_time ~ 1 + (1|Subject) + (1|Target) + (1|PSA_ID), 
+                      control = lmerControl(optimizer = "bobyqa",
+                                            optCtrl = list(maxfun = 1e6)), 
+                      data = subset(SP_V_lme_data,Language == "German"))
+
+
+## which is best fit
+#AIC(german.subject.model) < AIC(german.intercept.model)  ## TRUE
+#AIC(german.item.model) < AIC(german.subject.model)       ## TRUE
+#AIC(german.lab.model) < AIC(german.item.model)           ## FALSE
+section01_GER_AIC <- AIC(german.item.model) ## presentation in Result
+section01_GER_BIC <- BIC(german.item.model) ## presentation in Result
+
+german.fixed.one.model <- lmer(response_time ~ Match + (1|Subject) , 
+                      control = lmerControl(optimizer = "bobyqa",
+                                            optCtrl = list(maxfun = 1e6)), 
+                      data = subset(SP_V_lme_data,Language == "German"))
+
+
+
+german.fixed.two.model <- lmer(response_time ~ Match + (1|Subject) + (1|Target) , 
+                      control = lmerControl(optimizer = "bobyqa",
+                                            optCtrl = list(maxfun = 1e6)), 
+                      data = subset(SP_V_lme_data,Language == "German"))
+
+#AIC(german.fixed.two.model) < AIC(german.fixed.one.model) ## TRUE
+#AIC(german.fixed.two.model) < AIC(german.item.model) ## TRUE
+
+german.fixed.three.model <- lmer(response_time ~ Match + (1|Subject) + (1|Target) + (1|PSA_ID) , 
+                      control = lmerControl(optimizer = "bobyqa",
+                                            optCtrl = list(maxfun = 1e6)), 
+                      data = subset(SP_V_lme_data,Language == "German"))
+
+#AIC(german.fixed.three.model) < AIC(german.fixed.two.model) ## FALSE
+
+
+ger_model_test01 <- round(unlist(anova(german.item.model, german.fixed.two.model))[c("npar1","npar2","Chisq2","Pr(>Chisq)2")],3)
+
+#ger_model_test02 <- round(unlist(anova(german.lab.model, german.three.model))[c("npar1","npar2","Chisq2","Pr(>Chisq)2")],3)
+
+
+section02_GER_AIC <- AIC(german.fixed.two.model) ## presentation in Result
+section02_GER_BIC <- BIC(german.fixed.two.model) ## presentation in Result
+
+GER2_lme_out <- round(summary(german.fixed.two.model)$coefficients["MatchMISMATCHING",],3)
+
+#GER3_lme_out <- round(summary(german.three.model)$coefficients["MatchMISMATCHING",],3)
+```
+
+We conducted mixed-effect models on German data because this was the only language indicating a significant match advantage in the meta-analysis. The null-effect model converged at the random intercept factors of participants and items but laboratories, AIC = `r format(section01_GER_AIC, big_mark=",")`, BIC = `r format(section01_GER_BIC, big_mark=",")`; the fixed-effect model either converged at the random intercept factors of participants and items, AIC = `r format(section02_GER_AIC, big_mark=",")`, BIC = `r format(section02_GER_BIC, big_mark=",")`. The fixed-effect model was not significantly different from the null-effect model, ${\chi}^2$ = `r paste0("(",ger_model_test01[1],",",ger_model_test01[2],") = ",ger_model_test01[3], ", *p* = ", ger_model_test01[4])`, and did not revealed the significant match advantage: `r paste0("*b* = ", GER2_lme_out["Estimate"], ", *SE* = ",GER2_lme_out["Std. Error"],", *t*(",GER2_lme_out["df"],") = ",GER2_lme_out["t value"], ", *p* = ",GER2_lme_out["Pr(>|t|)"])`. All the details of the above fixed effects and random intercepts are summarized in Appendix 4.
+
+
+```{r table-SP-lme-coef, message=FALSE, warning=FALSE, include=FALSE}
+## Manage the SP effect CI table
+source("includes/files/lme_SPV_effects.R")
+```
+
+
+
+```{r PP_data_preparation, message=FALSE, warning=FALSE}
+## Dataset for mixed-effect model
+PP_lme_data <- PP_tidy %>% 
+  filter(Outlier == FALSE) %>% #filter outlier by time rule established above
+  filter(SPV_bound == FALSE) %>%  ## Exclude the participants who had SPV accuracy < 70%
+  mutate(Identical= factor(Identical,
+                          levels = c("Y","N"),
+                          labels = c("1SAME","0DIFF")))
+
+## export data for app5
+write_csv(PP_tidy, file="includes/files/PP_lme_data.csv")
+```
+
+
+
+```{r PP_null_lme, message=FALSE, warning=FALSE, include=FALSE}
+
+PP.intercept.lme <- lm(response_time ~ 1,
+                    data = PP_lme_data
+                    ) 
+
+PP.subject.lme <- lmerTest::lmer(response_time ~ 1 +
+                    (1 | Subject),   # By-subject random intercept
+             data = PP_lme_data,
+                    control = lmerControl(optimizer = "bobyqa",optCtrl = list(maxfun = 1e6)) # Increase maximum number of iterations to facilitate model convergence 
+                    ) 
+
+
+PP.item.lme <- lmerTest::lmer(response_time ~ 1 +
+                    (1 | Subject) +   # By-subject random intercept
+                    (1 | Picture1),    # By-item random intercept
+             data = PP_lme_data,
+                    control = lmerControl(optimizer = "bobyqa",optCtrl = list(maxfun = 1e6)) # Increase maximum number of iterations to facilitate model convergence 
+                    ) 
+
+
+PP.lab.lme <- lmerTest::lmer(response_time ~ 1 +
+                    (1 | Subject) +   # By-subject random intercept
+                    (1 | Picture1) +   # By-item random intercept
+                    (1 | PSA_ID),    # By-lab random intercept
+                    data = PP_lme_data,
+                    control = lmerControl(optimizer = "bobyqa",optCtrl = list(maxfun = 1e6)) # Increase maximum number of iterations to facilitate model convergence 
+                    ) 
+
+
+PP.lang.lme <- lmerTest::lmer(response_time ~ 1 +
+                    (1 | Subject) +   # By-subject random intercept
+                    (1 | Picture1) +   # By-item random intercept
+                    (1 | PSA_ID) +    # By-lab random intercept
+                    (1 | Language),
+                    data = PP_lme_data,
+                    control = lmerControl(optimizer = "bobyqa",optCtrl = list(maxfun = 1e6)) # Increase maximum number of iterations to facilitate model convergence 
+                    ) 
+
+
+#AIC(PP.subject.lme) < AIC(PP.intercept.lme)  ## TRUE
+#AIC(PP.item.lme) < AIC(PP.subject.lme) ## TRUE
+#AIC(PP.lab.lme) < AIC(PP.item.lme) ## TRUE
+#AIC(PP.lang.lme) < AIC(PP.lab.lme) ## TRUE
+section01_PP_AIC <- AIC(PP.lang.lme) # Presentation in text
+section01_PP_BIC <- BIC(PP.lang.lme) # Presentation in text
+```
+
+```{r PP_source_lme, message=FALSE, warning=FALSE, include=FALSE}
+
+PP.source.lme <- lmerTest::lmer(response_time ~ 
+                   Source +                # Fixed effect
+                    (1 | Subject) +   # By-subject random intercept
+                    (1 | Picture1) +   # By-item random intercept
+                    (1 | PSA_ID) +    # By-lab random intercept
+                    (1 | Language),
+                    data = PP_lme_data,
+                    control = lmerControl(optimizer = "bobyqa",optCtrl = list(maxfun = 1e6)) # Increase maximum number of iterations to facilitate model convergence 
+                  ) 
+
+#AIC(PP.source.lme) < AIC(PP.lang.lme) ## TRUE
+
+section02_PP_AIC <- AIC(PP.source.lme) # Presentation in text
+section02_PP_BIC <- BIC(PP.source.lme) # Presentation in text
+
+# Comparison of source model and null model
+PP_model_test00 <- round(unlist(anova(PP.lang.lme, PP.source.lme))[c("npar1","npar2","Chisq2","Pr(>Chisq)2")],3)
+
+
+pp_source_out <- round(summary(PP.source.lme)$coefficients["Sourcesite",],3)
+
+
+```
+
+
+```{r PP_rotation_lme, message=FALSE, warning=FALSE}
+## Additive fixed effects of mental rotation scores and languages
+PP.lang.add.lme <- lmerTest::lmer(response_time ~ 
+                    Identical +                # Fixed effect
+                    (1 | Subject) +   # By-subject random intercept
+                    (1 | Picture1) +   # By-item random intercept
+                    (1 | PSA_ID) +    # By-lab random intercept
+                    (1 | Language),    # By-language random intercept
+                    data = PP_lme_data,
+                    control = lmerControl(optimizer = "bobyqa",optCtrl = list(maxfun = 1e6)) # Increase maximum number of iterations to facilitate model convergence 
+                    ) 
+
+## Interaction of mental rotation scores and languages
+PP.lang.inter.lme <- lmerTest::lmer(response_time ~ 
+                    Identical +                # Fixed effect
+                    (1 | Subject) +   # By-subject random intercept
+                    (1 | Picture1) +   # By-item random intercept
+                    (1 | PSA_ID) +    # By-lab random intercept
+                    (Identical | Language),    # By-language random intercept
+                    data = PP_lme_data,
+                    control = lmerControl(optimizer = "bobyqa",optCtrl = list(maxfun = 1e6)) # Increase maximum number of iterations to facilitate model convergence 
+                    ) 
+
+#AIC(PP.lang.add.lme) < AIC(PP.lab.lme)  ## TRUE
+#AIC(PP.lang.inter.lme)< AIC(PP.lang.add.lme)  ## TRUE
+
+
+PP_add_AIC <- AIC(PP.lang.add.lme)
+PP_add_BIC <- BIC(PP.lang.add.lme)
+
+PP_inter_AIC <- AIC(PP.lang.inter.lme)
+PP_inter_BIC <- BIC(PP.lang.inter.lme)
+
+
+PP_model_test01 <- round(unlist(anova(PP.lab.lme, PP.lang.add.lme)),3)[c("npar1","npar2","Chisq2","Pr(>Chisq)2")] ## present in the text
+
+#PP_model_test02 <- round(unlist(anova(PP.lab.lme,PP.lang.inter.lme)),3)[c("npar1","npar2","Chisq2","Pr(>Chisq)2")] 
+
+PP_model_test02 <- round(unlist(anova(PP.lang.add.lme,PP.lang.inter.lme)),3)[c("npar1","npar2","Chisq2","Pr(>Chisq)2")] 
+
+
+#PP_inter_AIC < PP_add_AIC # PP.lang.inter.cor.lme is better
+
+pp_lme_out <- round(summary(PP.lang.inter.lme)$coefficients["IdenticalDIFF",],3)
+
+#reported_p <- ifelse(pp_cor_lme_out["Pr(>|t|)"] < .001,"< .001", paste0("= ", pp_cor_lme_out["Pr(>|t|)"]))
+
+```
+
+
+**Analysis of mental rotation scores.** Followed the analysis plan on the sentence-picture verification data, the analysis on picture-picture verification data at first confirmed the null-effect model converged at all random intercept factors of participants, items, laboratories, and languages, AIC = `r format(section01_PP_AIC, big_mark=",")`, BIC = `r format(section01_PP_BIC, big_mark=",")`. To evaluate the affection of data collection sources, we compared the fixed-effect model of data sources and the null-effect model. This fixed-effect model converged at the all random intercept factors, AIC = `r format(section02_PP_AIC, big_mark=",")`, BIC = `r format(section02_PP_BIC, big_mark=",")`, but was not significantly different from the null-effect model, ${\chi}^2$ `r paste0("(",PP_model_test00[1],",",PP_model_test00[2],") = ",PP_model_test00[3], ", *p* = ", PP_model_test00[4])`. 
+
+The planned analysis treated the discrepancy of object orientation settings as the mental rotation scores. The models included the orientation setting as the only one fixed effect converged at all the random intercepts of participants, items, laboratories and orientation setting on languages, AIC = `r format(PP_inter_AIC, big_mark=",")`, BIC = `r format(PP_inter_BIC, big_mark=",")`, rather than at the  random intercepts of participants, items, laboratories and language, AIC = `r format(PP_add_AIC, big_mark=",")`, BIC = `r format(PP_add_BIC, big_mark=",")`. There was significant difference between the two models, ${\chi}^2$ `r paste0("(",PP_model_test02[1],",",PP_model_test02[2],") = ",PP_model_test02[3], ", *p* = ", PP_model_test02[4])`, and the latter model indicated the significant mental rotation scores, `r paste0("*b* = ", pp_lme_out["Estimate"], ", *SE* = ",pp_lme_out["Std. Error"],", *t*(",pp_lme_out["df"],") = ",pp_lme_out["t value"], ", *p* < .001")`.  The coefficients of all considered mixed-effects models are reported in Appendix 5. Table \@ref(tab:table-lme-coef) summarized the language-specific mental rotation scores estimated by the mixed-effect models. 
+
+
+```{r table-PP-lme-coef, message=FALSE, warning=FALSE, include=FALSE}
+## Manage the PP effect CI table
+source("includes/files/lme_PP_effects.R")
+
+```
+
+
+(Insert Table \@ref(tab:table-lme-coef) about here) 
+
+```{r table-lme-coef, echo=FALSE, message=FALSE, warning=FALSE}
+effect_table <- SPV_effect_table %>% left_join(
+  PP_effect_table, by = "Language"
+) 
+
+flextable(effect_table)%>%
+  set_header_labels(Language="Language", SPV_CI = "Match Advantage", PP_CI = "Mental Rotation Score") %>%
+  set_caption(caption = "Estimated effects and 95% confidence interval grouped by languages. ") %>%
+  autofit()
+```
+
+
+```{r prediction_data, message=FALSE, warning=FALSE}
+## Dataset for prediciton model
+PP_aov_data <- PP_tidy %>% #left_join(outliers_table, by=c("PSA_ID" = "LAB", "Subject" = "Subject")) %>%  ## filter the outliers by SP_V data
+  filter(Outlier == FALSE) %>%#filter outlier by time rule established above
+  # consider excluding people who couldn't get these right 
+  # using the same accuracy levels as above 
+#mutate(Subject = paste0(Source,"_",PSA_ID,"_",subject_nr)) %>%
+#  left_join(rbind(PP_subj_osweb, PP_subj_site), 
+#             by = c("Subject" = "Subject", 
+#                   "Language" = "Language", 
+#                   "PSA_ID" = "PSA_ID")) %>% 
+  filter(SPV_bound == FALSE) %>%  ## Exclude the participants who had accuracy < 70%
+  group_by(Source, Language, PSA_ID, Subject, Identical) %>%
+  summarise(subject_M = median(response_time), subject_ACC = mean(correct))
+
+## Merge the SP_V and PP data by participants' mean response times
+model_data <- (SP_V_tidy %>% 
+  filter(Outlier == FALSE) %>% 
+  group_by(Language, Subject, Match) %>%
+  summarise(subject_M = median(response_time)) %>%
+  pivot_wider(names_from = Match, values_from = c(subject_M)) %>%
+  mutate(Effect = (N - Y) )) %>%
+left_join(
+(PP_aov_data %>%
+  select(-subject_ACC) %>%
+  pivot_wider(names_from = Identical, values_from = subject_M) %>%
+  mutate(Imagery = (N - Y))),
+by = c("Language","Subject")
+)
+```
+
+
+```{r prediction_model, message=FALSE, warning=FALSE, include=FALSE}
+## Prediction models for all languages 
+lang_model1 <- lm(Effect ~ Language*Imagery, data=model_data)
+lang_model0 <- lm(Effect ~ Language, data=lang_model1$model)
+model_test <- anova(lang_model0, lang_model1)[2,c("Df","Res.Df","F","Pr(>F)")]
+lang_reults <- apa_print(lang_model0)
+#imagery_results <- apa_print(lang_model1)
+
+
+## Below result does not show in the report.
+Ger_model0 <- lm(Effect ~ Imagery,
+data=subset(model_data, Language == "German"))
+
+Ger_result <- summary(Ger_model0)$coef["Imagery",]
+```
+
+**Prediction model of match advantages.** The last preregistered plan was to build the regression model that could predict the match advantages by the mental rotation scores. If mental rotation scores predicted match advantage, the regression model with languages and mental rotation scores should fit the data better than the regression model with languages only. However, the model comparison indicated the better fitted regression model had languages only, *F* < 1. As Table \@ref(tab:prediction_table) illustrated, none of the language set of mental rotation scores sufficiently predict the match advantages.
+
+(Insert Table \@ref(tab:prediction_table) about here)
+
+
+```{r prediction_table, echo=FALSE, message=FALSE, warning=FALSE}
+lang_reults$table$term = lang_reults$table$term %>% gsub(pattern = "Language", replacement="")
+
+flextable(lang_reults$table)%>%
+  set_header_labels(term="Predictor", estimate = "b", conf.int = "95% CI", statistic="t",df = "df", p.value = "p") %>%
+  set_caption(caption = "Regression coefficient generated from the mental rotation scores. Dependent variable is the match advantages.") %>%
+  autofit()  
+```
+

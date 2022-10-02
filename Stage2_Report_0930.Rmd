@@ -1,0 +1,501 @@
+---
+title             : "Investigating Object Orientation Effects Across 18 Languages"
+shorttitle        : "OBJECT ORIENTATION EFFECTS"
+
+## Contributors table: https://docs.google.com/spreadsheets/d/1EquLYV4baIjYtfF8kxs6-w-aQig32s2gRT-w4wurhhw/edit#gid=0
+
+author: 
+  - name          : "Sau-Chin Chen"
+    affiliation   : "1"
+    corresponding : yes    # Define only one corresponding author
+    address       : "No. 67, Jei-Ren St., Hualien City, Taiwan"
+    email         : "csc2009@mail.tcu.edu.tw"
+  - name: Erin Buchanan
+    affiliation: 2
+  - name: Zoltan Kekecs
+    affiliation: "3,4"
+  - name: Jeremy K. Miller
+    affiliation: 5
+  - name: Anna Szabelska
+    affiliation: 6
+  - name: Balazs Aczel
+    affiliation: 3
+  - name: Pablo Bernabeu
+    affiliation: 7
+  - name: Patrick Forscher
+    affiliation: "8,9"
+  - name: Attila Szuts
+    affiliation: 3
+  - name: Zahir Vally
+    affiliation: 10
+  - name: Ali H. Al-Hoorie
+    affiliation: 11
+  - name: Mai Helmy
+    affiliation: "12,13"
+  - name: Caio Santos Alves da Silva
+    affiliation: 14
+  - name: Luana Oliveira da Silva
+    affiliation: 14
+  - name: Yago Luksevicius de Moraes
+    affiliation: 14
+  - name: Rafael Ming C. S. Hsu
+    affiliation: 14
+  - name: Anthonieta Looman  Mafra
+    affiliation: 14
+  - name: Jaroslava V. Valentova
+    affiliation: 14
+  - name: Marco Antonio Correa Varella
+    affiliation: 14
+  - name: Barnaby Dixon
+    affiliation: 15
+  - name: Kim Peters
+    affiliation: 15
+  - name: Nik Steffens
+    affiliation: 15
+  - name: Omid Ghaesmi
+    affiliation: 16
+  - name: Andrew Roberts
+    affiliation: 16
+  - name: Robert M. Ross
+    affiliation: 16
+  - name: Ian D. Stephen
+    affiliation: "16,17"
+  - name: Marina Milyavskaya
+    affiliation: 18
+  - name: Kelly Wang
+    affiliation: 18
+  - name: Kaitlyn M. Werner
+    affiliation: 18
+  - name: Dawn L. Holford
+    affiliation: 19
+  - name: Miroslav Sirota
+    affiliation: 19
+  - name: Thomas Rhys Evans
+    affiliation: 20
+  - name: Dermot Lynott
+    affiliation: 7
+  - name: Bethany M. Lane
+    affiliation: 21
+  - name: Danny Riis
+    affiliation: 21
+  - name: Glenn P. Williams
+    affiliation: 22
+  - name: Chrystalle B. Y. Tan
+    affiliation: 23
+  - name: Alicia Foo
+    affiliation: 24
+  - name: Steve M. J. Janssen
+    affiliation: 24
+  - name: Nwadiogo Chisom Arinze
+    affiliation: 25
+  - name: Izuchukwu Lawrence Gabriel Ndukaihe
+    affiliation: 25
+  - name: David Moreau
+    affiliation: 26
+  - name: Brianna Jurosic
+    affiliation: 27
+  - name: Brynna Leach
+    affiliation: 27
+  - name: Savannah Lewis
+    affiliation: 27
+  - name: Peter R. Mallik
+    affiliation: 27
+  - name: Kathleen Schmidt
+    affiliation: 28
+  - name: William J. Chopik
+    affiliation: 29
+  - name: Leigh Ann Vaughn
+    affiliation: 30
+  - name: Manyu Li
+    affiliation: 31
+  - name: Carmel A. Levitan
+    affiliation: 32
+  - name: Daniel Storage
+    affiliation: 33
+  - name: Carlota Batres
+    affiliation: 34
+  - name: Janina Enachescu
+    affiliation: 35
+  - name: Jerome Olsen
+    affiliation: 35
+  - name: Martin Voracek
+    affiliation: 35
+  - name: Claus Lamm
+    affiliation: 36
+  - name: Ekaterina Pronizius
+    affiliation: 36
+  - name: Tilli Ripp
+    affiliation: 37
+  - name: Jan Philipp Röer
+    affiliation: 37
+  - name: Roxane Schnepper
+    affiliation: 37
+  - name: Marietta Papadatou-Pastou
+    affiliation: 38
+  - name: Aviv Mokady
+    affiliation: 39
+  - name: Niv Reggev
+    affiliation: 39
+  - name: Priyanka Chandel
+    affiliation: 40
+  - name: Pratibha Kujur
+    affiliation: 40
+  - name: Babita Pande
+    affiliation: 40
+  - name: Arti Parganiha
+    affiliation: 40
+  - name: Noorshama Parveen
+    affiliation: 40
+  - name: Sraddha Pradhan
+    affiliation: 40
+  - name: Margaret Messiah Singh
+    affiliation: 40
+  - name: Max Korbmacher
+    affiliation: 41
+  - name: Jonas R. Kunst
+    affiliation: 42
+  - name: Christian K. Tamnes
+    affiliation: 42
+  - name: Frederike S. Woelfert
+    affiliation: 42
+  - name: Kristoffer Klevjer
+    affiliation: 43
+  - name: Sarah E. Martiny
+    affiliation: 43
+  - name: Gerit Pfuhl
+    affiliation: 43
+  - name: Sylwia Adamus
+    affiliation: 44
+  - name: Krystian Barzykowski
+    affiliation: 44
+  - name: Katarzyna Filip
+    affiliation: 44
+  - name: Patrícia Arriaga
+    affiliation: 45
+  - name: Vasilije Gvozdenović
+    affiliation: 46
+  - name: Vanja Kovic
+    affiliation: 46
+  - name: Tao-tao Gan
+    affiliation: 47
+  - name: Chuan-Peng Hu
+    affiliation: 48
+  - name: Qing-Lan Liu
+    affiliation: 47
+  - name: Zhong Chen
+    affiliation: 49
+  - name: Fei Gao
+    affiliation: 49
+  - name: Lisa Li
+    affiliation: 49
+  - name: Jozef Bavolár
+    affiliation: 50
+  - name: Monika Hricová
+    affiliation: 50
+  - name: Pavol Kacmár
+    affiliation: 50
+  - name: Matúš Adamkovic
+    affiliation: "51,52"
+  - name: Peter Babincák
+    affiliation: 51
+  - name: Gabriel Baník
+    affiliation: "51,52"
+  - name: Ivan Ropovik
+    affiliation: "52,53"
+  - name: Danilo Zambrano Ricaurte
+    affiliation: 54
+  - name: Sara Álvarez Solas
+    affiliation: 55
+  - name: Harry Manley
+    affiliation: 56
+  - name: Panita Suavansri
+    affiliation: 56
+  - name: Chun-Chia Kung
+    affiliation: 57
+  - name: Belemir Çoktok
+    affiliation: 58
+  - name: Asil Ali Özdogru
+    affiliation: 58
+  - name: Çaglar Solak
+    affiliation: 59
+  - name: Sinem Söylemez
+    affiliation: 59
+  - name: Sami Çoksan
+    affiliation: 60
+  - name: John Protzko
+    affiliation: 61
+  - name: Ilker Dalgar
+    affiliation: 62
+  - name: Vinka Mlakic
+    affiliation: 63
+  - name: Elisabeth Oberzaucher
+    affiliation: 64
+  - name: Stefan Stieger
+    affiliation: 63
+  - name: Selina Volsa
+    affiliation: 63
+  - name: Janis Zickfeld
+    affiliation: 65
+  - name: Christopher R. Chartier
+    affiliation: 27
+
+
+affiliation:
+  - id: 1
+    institution: Department of Human Development and Psychology, Tzu-Chi University, Hualien, Taiwan
+  - id: 2
+    institution: Harrisburg University of Science and Technology, Harrisburg, PA, USA
+  - id: 3
+    institution: Institute of Psychology, ELTE, Eotvos Lorand University, Budapest, Hungary
+  - id: 4
+    institution: Department of Psychology, Lund University, Lund, Sweden
+  - id: 5
+    institution: Department of Psychology, Willamette University,Salem OR, USA
+  - id: 6
+    institution: Institute of Cognition and Culture, Queen’s University Belfast, UK
+  - id: 7
+    institution: Department of Psychology, Lancaster University, Lancaster, United Kingdom
+  - id: 8
+    institution: LIP/PC2S, Université Grenoble Alpes, Grenoble, France
+  - id: 9
+    institution: Busara Center for Behavioral Economics, Nairobi, Kenya
+  - id: 10
+    institution: Department of Clinical Psychology, United Arab Emirates University, Al Ain, UAE
+  - id: 11
+    institution: Royal Commission for Jubail and Yanbu, Jubail, Saudi Arabia
+  - id: 12
+    institution: Psychology Department, College of Education, Sultan Qaboos University, Muscat, Oman
+  - id: 13
+    institution: Psychology Department, Faculty of Arts, Menoufia University, Shebin El-Kom, Egypt
+  - id: 14
+    institution: Department of Experimental Psychology, Institute of Psychology, University of Sao Paulo, Sao Paulo, Brazil
+  - id: 15
+    institution: School of Psychology, University of Queensland, Brisbane, Australia
+  - id: 16
+    institution: Department of Psychology, Macquarie University, Sydney, Australia
+  - id: 17
+    institution: Department of Psychology, Nottingham Trent University, Nottingham, UK
+  - id: 18
+    institution: Department of Psychology, Carleton University, Ottawa, Canada
+  - id: 19
+    institution: Department of Psychology, University of Essex, Colchester, UK
+  - id: 20
+    institution: School of Social, Psychological and Behavioural Sciences, Coventry University, Coventry, UK
+  - id: 21
+    institution: Division of Psychology, School of Social and Health Sciences, Abertay University, Dundee, UK
+  - id: 22
+    institution: School of Psychology, Faculty of Health Sciences and Wellbeing, University of Sunderland, Sunderland, UK.
+  - id: 23
+    institution: Department of Psychiatry and Psychological Health, Universiti Malaysia Sabah, Sabah, Malaysia
+  - id: 24
+    institution: School of Psychology, University of Nottingham Malaysia, Selangor, Malaysia
+  - id: 25
+    institution: Department of Psychology, Alex Ekwueme Federal University, Ndufu-Alike, Nigeria
+  - id: 26
+    institution: School of Psychology, University of Auckland, Auckland, NZ
+  - id: 27
+    institution: Department of Psychology, Ashland University, Ashland, OH, USA
+  - id: 28
+    institution: School of Psychological and Behavioral Sciences, Southern Illinois University, Carbondale, IL, USA
+  - id: 29
+    institution: Department of Psychology, Michigan State University, East Lansing, MI, USA
+  - id: 30
+    institution: Department of Psychology, Ithaca College, Ithaca, NY, USA
+  - id: 31
+    institution: Department of Psychology, University of Louisiana at Lafayette, Lafayette, LA, USA
+  - id: 32
+    institution: Department of Cognitive Science, Occidental College, Los Angeles, USA
+  - id: 33
+    institution: Department of Psychology, University of Denver, Denver, CO, USA
+  - id: 34
+    institution: Department of Psychology, Franklin and Marshall College, Lancaster, PA, USA
+  - id: 35
+    institution: Faculty of Psychology, University of Vienna, Wien, Austria
+  - id: 36
+    institution: Department of Cognition, Emotion, and Methods in Psychology, Faculty of Psychology, University of Vienna, Wien, Austria
+  - id: 37
+    institution: Department of Psychology and Psychotherapy, Witten/Herdecke University, Germany
+  - id: 38
+    institution: School of Education, National and Kapodistrian University of Athens, Athens, Greece
+  - id: 39
+    institution: Department of Psychology, Ben Gurion University, Beersheba, Israel
+  - id: 40
+    institution: School of Studies in Life Science, Pt. Ravishankar Shukla University, Raipur, India
+  - id: 41
+    institution: Department of Biological and Medical Psychology, University of Bergen, Bergen, Norway
+  - id: 42
+    institution: Department of Psychology, University of Oslo, OSLO, Norway
+  - id: 43
+    institution: Department of Psychology, UiT - The Arctic University of Norway, Tromsø, Norway
+  - id: 44
+    institution: Institute of Psychology, Jagiellonian University, Krakow, Poland
+  - id: 45
+    institution: Iscte-University Institute of Lisbon, CIS-IUL, Lisbon, Portugal
+  - id: 46
+    institution: Laboratory for Neurocognition and Applied Cognition, Faculty of Philosophy, University of Belgrade, Belgrade, Serbia
+  - id: 47
+    institution: Department of Psychology, Hubei University, Wuhan, China
+  - id: 48
+    institution: School of Psychology, Nanjing Normal University, Nanjing, China
+  - id: 49
+    institution: Faculty of Arts and Humanities, University of Macau, Macau, China
+  - id: 50
+    institution: Department of Psychology, Faculty of Arts, Pavol Jozef Šafarik University in Košice, Košice, Slovakia
+  - id: 51
+    institution: Institute of Psychology, University of Presov, Prešov, Slovakia
+  - id: 52
+    institution: Institute for Research and Development of Education, Faculty of Education, Charles university, Prague, Czechia
+  - id: 53
+    institution: Faculty of Education, University of Presov, Prešov, Slovakia
+  - id: 54
+    institution: Faculty of Psychology, Fundación Universitaria Konrad Lorenz, Bogotá, Colombia
+  - id: 55
+    institution: Ecosystem Engineer, Universidad Regional Amazónica Ikiam, Tena, Ecuador
+  - id: 56
+    institution: Faculty of Psychology, Chulalongkorn University, Bangkok, Thailand
+  - id: 57
+    institution: Department of Psychology, National Cheng Kung University, Tainan, Taiwan
+  - id: 58
+    institution: Department of Psychology, Üsküdar University, Istanbul, Turkey
+  - id: 59
+    institution: Department of Psychology, Manisa Celal Bayar University,  Manisa,Turkey
+  - id: 60
+    institution: Department of Psychology, Middle East Technical University, Ankara, Turkey
+  - id: 61
+    institution: Department of Psychological Science, Central Connecticut State University, New Britain, CT, USA
+  - id: 62
+    institution: Department of Psychology, Ankara Medipol University, Ankara, Turkey.
+  - id: 63
+    institution: Department of Psychology and Psychodynamics, Karl Landsteiner University of Health Sciences, Krems an der Donau, Austria
+  - id: 64
+    institution: Department of Evolutionary Anthropology, University of Vienna, Wien, Austria
+  - id: 65
+    institution: Department of Management, Aarhus University, Aarhus, Denmark
+
+
+authornote: |
+  **Author contributions**: Sau-Chin Chen contributed to the study concept, the design analysis protocol and wrote the initial report draft. Patrick Forscher, Pablo Bernabeu, Balazs Aczel and Attila Szuts improved the analysis protocol. Zoltan Kekecs, Jeremy K. Miller and Anna Szabelska managed the project administration which was established by Christopher R. Chartier. All the rest of authors contributed to the material prepation and data collection. All authors commented on previous versions of the manuscript, read and approved the final manuscript.
+  
+  **Funding statement.** Below authors had the individual funds supporiting their participations. Glenn P. Williams was supported by the Leverhulme Trust Research Project Grant (RPG-2016-093). Krystian Barzykowski was supported by the National Science Centre, Poland (2019/35/B/HS6/00528). Zoltan Kekecs was supported by the János Bolyai Research Scholarship of the Hungarian Academy of Science. Erin Buchanan was supported by the National Institute on Mental Health (1R03MH110812-01). Patrícia Arriaga was supported by the Portuguese National Foundation for Science and Technology (UID/PSI/03125/2019). Gabriel Baník was supported by Charles University Grant Agency (PRIMUS/20/HUM/009).
+  
+  **Ethical approval statement.** Authors who collected data on site and online had the ethical approval/agreement from their local institutions. The latest status of ethical approval for all the participating authors is available at the public OSF folder (https://osf.io/e428p/ “IRB approvals” in Files). 
+  
+  **Acknowledgement.** We appreciated the major contributions from the contributors as below. Chris Chartier and Jeremy Miller managed and monitored progress. Erin Buchanan provided guidelines to improve the inter-lab progress website management and managed the JATOS server for online data collection. Arti Parganiha, Asil Özdoğru, Attila Szuts, Babita Pande, Danilo Zambrano Ricaurte, Gabriel Baník, Harry Manley, Jonas Kunst, Krystian Barzykowski, Marco Antonio Correa Varella, Marietta Papadatou Pastou, Niv Reggev, Patrícia Arriaga, Stefan Stieger, Vanja Ković and Zahir Vally managed the material translation from English to the other languages. Roles of each collaborator are available in the public table (https://osf.io/mz97h/). We thank the suggestions from the editor and two reviewers on our first and second proposals. 
+
+abstract: |
+  Mental simulation theories of language comprehension propose that people automatically create mental representations of objects mentioned in sentences. Representation is often measured with the sentence-picture verification task, in which participants first read a sentence and, on a following screen, see a picture of an object. Participants then verify whether the latter object had been mentioned in the sentence. Crucially, two covert conditions exist: the sentence and the picture can either match or mismatch in terms of a perceptual property, including object orientation, shape, color and size. The key finding obtained in some studies is the match advantage, whereby responses were faster in the match condition; however, object orientation results are often inconsistent inconsistent findings across languages. This registered report describes our investigation of the match advantage of object orientation across 18 languages, which was undertaken by 33 laboratories and organized by the Psychological Science Accelerator. The preregistered analysis revealed that the match advantage was supported either overall or in any specific language. 
+
+##We discuss the need for sample sizes that are far larger than usual, which are unequally accessible in different languages. 
+
+keywords          : "mental simulation, object orientation, mental rotation, language comprehension"
+wordcount         : "5,138 words in total; Introduction: 1,242 words"
+
+bibliography: "./includes/bib/Orientation across langauges.bib"
+csl         : "./includes/bib/apa7.csl"
+
+#appendix          : 
+#  - "Stage2_app01.Rmd"
+#  - "Stage2_app02.Rmd"
+#  - "Stage2_app03.Rmd"
+floatsintext      : yes
+figurelist        : no
+figsintext        : yes
+tablelist         : no
+footnotelist      : no
+linenumbers       : no
+mask              : no
+draft             : no
+keep_tex          : no
+
+lang              : "en-US"
+documentclass     : "apa6"
+classoption       : "man"
+#latex_engine      : "xelatex"
+
+header-includes:
+   - \usepackage{caption}
+   - \usepackage{float}
+   
+output            : 
+  papaja::apa6_pdf
+#    citation_package: biblatex
+#    includes:
+#      after_body: app01.tex
+---
+
+```{r setup, include = FALSE}
+  knitr::opts_chunk$set(
+	echo = FALSE,
+	cache = FALSE
+)
+  library(tidyverse)
+  library(data.table)
+  library(lubridate)
+  library(magrittr)
+  library(flextable)
+  library(lme4)
+  library(lmerTest)
+  #library(cAIC4)
+  library(parameters)
+  library(metafor)
+  library(afex)
+  library(standardize)
+  library(sjPlot)
+  library(ggplot2)
+  library("kableExtra")
+  library("papaja")
+
+
+# Import multiple-bytes string in English system
+Sys.setlocale("LC_ALL","English") 
+```
+
+
+<!---
+
+- [Revision at google doc](https://docs.google.com/document/d/1vOnRY5WVZkhCCipJwrBcbIoaC7hPagYD7tgIUc8zlRU/edit#)
+
+--->
+
+```{r analysis-preferences}
+# Seed for random number generation
+set.seed(42)
+knitr::opts_chunk$set(cache.extra = knitr::rand_seed)
+```
+
+```{r INTRO, child='Stage2_Introduction.Rmd'}
+```
+
+
+```{r METHOD, child='Stage2_Method.Rmd'}
+```
+
+```{r RESULTS, child='Stage2_Results.Rmd'}
+```
+
+```{r DISCUSSION, child='Stage2_Discussion.Rmd'}
+```
+
+
+
+
+\newpage
+
+# References
+```{r create_r-references, warning=FALSE, cache=FALSE}
+r_refs(file = "./includes/bib/Orientation across langauges.bib")
+```
+
+\begingroup
+\setlength{\parindent}{-0.5in}
+\setlength{\leftskip}{0.5in}
+
+<div id = "refs"></div>
+\endgroup
+
+
+<!---
+\newpage
+
+# (APPENDIX) Appendix {-}
+--->
