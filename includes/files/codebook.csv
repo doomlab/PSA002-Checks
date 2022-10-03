@@ -1,0 +1,26 @@
+variable name,source files,description
+Acc_bound,all_rawdata_SP_V,If this participant has more than 38 incorrect responses (> 30%) in this study.
+alt_task,all_rawdata_SP_M,Identification for the sentence-picture trial that is the memory check.
+correct,"all_rawdata_SP_V,all_rawdata_PP,all_rawdata_SP_M",Correctness of the current response.
+datetime,"all_rawdata_SP_V,all_rawdata_PP,all_rawdata_SP_M",Exact time the participant completed the task.
+Identical,all_rawdata_PP,"For picture-picture verification task, orientations of the two target pictures are identical or not."
+jatosVersion,all_rawdata_SP_M,Latest jatos server version.
+List,"all_rawdata_SP_V,all_rawdata_SP_M,",Experimental stimuli list of sentence-picture verication task.
+logfile,"all_rawdata_SP_V,all_rawdata_PP,all_rawdata_SP_M",On-site study: path to save the logfile.
+Match,all_rawdata_SP_V,Matching/Mismatching of object orientation in target pictures
+opensesame_codename,"all_rawdata_SP_V,all_rawdata_PP,all_rawdata_SP_M",Latest OpenSesame codename
+opensesame_version,"all_rawdata_SP_V,all_rawdata_PP,all_rawdata_SP_M",Latest OpenSesame version
+Orientation,all_rawdata_SP_V,Target object orientation is Horizontal/Vertical.
+Orientation1,all_rawdata_PP,Orientation of left target picture
+Orientation2,all_rawdata_PP,Orientation of right target picture
+Picture1,all_rawdata_PP,Filename of left target picture
+Picture2,all_rawdata_PP,Filename of right target picture
+PList,"all_rawdata_SP_V,all_rawdata_SP_M,",Practical stimuli list of sentence-picture verication task.
+PPList,all_rawdata_PP,Experimental stimuli list of picture-picture verication task.
+Probe,"all_rawdata_SP_V,all_rawdata_SP_M,",Text content of probe sentences. We used pictures instead in rtl languages.
+PSA_ID,"all_rawdata_SP_V,all_rawdata_PP,all_rawdata_SP_M",Laboratory code.
+response_time,"all_rawdata_SP_V,all_rawdata_PP,all_rawdata_SP_M",raw response time
+SEED,"all_rawdata_SP_V,all_rawdata_PP,all_rawdata_SP_M",Randomization seed in on-site study.
+subject_nr,"all_rawdata_SP_V,all_rawdata_PP,all_rawdata_SP_M",raw participant id
+Target,all_rawdata_SP_V,Filename of target picture
+task_order,all_rawdata_SP_V,Task sequence in on-site study
