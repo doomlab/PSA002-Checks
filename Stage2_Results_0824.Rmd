@@ -348,7 +348,7 @@ The meta-analysis of the Internet-based data revealed a match disadvantage with 
 
 
 
-```{r meta-ger, eval=FALSE, fig.cap="Meta-analysis, message=FALSE, warning=FALSE, include=FALSE}
+```{r meta-ger, eval=FALSE, fig.cap="Meta-analysis", message=FALSE, warning=FALSE, include=FALSE}
 ## This chunk is unavailable because the meta analysis procedure was updated.
 ## Locate English data for meta-analysis
 SP_V_ger_meta_data <- SP_V_tidy %>%

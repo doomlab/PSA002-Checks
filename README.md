@@ -21,7 +21,7 @@ numeric(0)
 - Please note, the `rawdata` is assumed to be original - as it would be difficult to track. These files were uploaded in January and do not appear to have been changed. 
 - Each update to the methods/results was checked in the `check_changes` folder to show the differences in GitHub. 
 
-- Feb to May changes:
+- Feb to May changes: [View differences](https://github.com/doomlab/PSA002-Checks/commit/f2527ca1252db881d83d1f73013191c073891bf8)
   - I had fixed participants who accidentally got the same participant ID assigned twice. This code was turned off, and those participants were excluded without discussion. 
   - The original outlier exclusion code was re-added - this is after discussion to use the new outlier exclusions and not implement this exclusion. It's implemented in strange places, but not necessarily across all the code. 
   - Participants who did not perform at least 70% correct were added back in, which does not match the pre-registered rule. 
@@ -30,5 +30,12 @@ numeric(0)
   - Other results show big changes - but this section included a big change to not run the LMEs separately. 
   
 - May to August changes:
-
+  - In the method document, the birth year calculation is changed, unclear what is happening.
+  - Additionally, the calculation of the number of labs is changed. 
+  - A big section was moved from results to method. I did not check it line by line, and it likely has the same problems as described above (including ignoring the pre-registered 70% exclusion). 
+  - At this point, the meta analysis code was moved to the separate file (and this document will run the newest version). This original excludes labs without discussion, but this was fixed in recent version.
+  - However, the *way* the meta-analysis was conducted is now completely different. Each language is run as a separate meta-analysis and then these are combined - whereas before, all labs were treated as separate entries into the meta analysis without the language clustering.  
+  - The LMEs appear to be updated to the newer ones, but several are also eval = F, so somewhat unclear.
+  - A big change to notice is that more participants than before are included (this is hard to see because Table 1 has been split into two tables, but there are more if you add English for example, you can also see that lower accuracy participants are not excluded by examining the accuracy percents next to Arabic). 
+  
 
