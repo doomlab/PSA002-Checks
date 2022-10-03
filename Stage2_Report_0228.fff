@@ -1,0 +1,35 @@
+\begin{figure*}[hbt]
+\ifnextchar[{\eatarg}{}
+
+\centering
+\includegraphics{Stage2_Report_0228_files/figure-latex/meta-all-1.pdf}
+\caption{\label{fig:meta-all}Meta-analysis on match advantage of object orienation for all datasets}
+\end{figure*}
+\begin{figure*}[hbt]
+\ifnextchar[{\eatarg}{}
+
+\centering
+\includegraphics{Stage2_Report_0228_files/figure-latex/meta-tc-1.pdf}
+\caption{\label{fig:meta-tc}Meta-analysis on match advantage of object orienation for Traditional Chinese datasets.}
+\end{figure*}
+\begin{figure*}[hbt]
+\ifnextchar[{\eatarg}{}
+
+\centering
+\includegraphics{Stage2_Report_0228_files/figure-latex/plot-SP-site-lme-1.pdf}
+\caption{\label{fig:plot-SP-site-lme}Response times and standard error in the sentence-picture verification task by match condition in each language (on-site data only).}
+\end{figure*}
+\begin{figure*}[hbt]
+\ifnextchar[{\eatarg}{}
+
+\centering
+\includegraphics{Stage2_Report_0228_files/figure-latex/plot-SP-osweb-lme-1.pdf}
+\caption{\label{fig:plot-SP-osweb-lme}Response times and standard error in the sentence-picture verification task by match condition in each language (web-based data only).}
+\end{figure*}
+\begin{figure*}[hbt]
+\ifnextchar[{\eatarg}{}
+
+\centering
+\includegraphics{Stage2_Report_0228_files/figure-latex/plot-PP-lme-1.pdf}
+\caption{\label{fig:plot-PP-lme}Response times and standard error in the picture-picture verification task by match condition in each language (both on-site and web-based data).}
+\end{figure*}

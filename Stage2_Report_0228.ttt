@@ -1,0 +1,53 @@
+\begin{table*}[hbt]
+\ifnextchar[{\eatarg}{}
+
+
+\caption{\label{tab:summary-site}Median reaction times and accuracy percentages (in parentheses) per match condition (Mismatching, Matching); Match advantage (difference in response times) by language in the on-site data.}
+\centering
+\begin{tabular}[t]{lrrrr}
+\toprule
+Language & N & Mismatching & Matching & Match Advantage\\
+\midrule
+English & 596 & 583(93.76) & 580(94.21) & 3.50\\
+German & 99 & 584(146.72) & 570(185.27) & 14.50\\
+Greek & 97 & 744(89.35) & 728(90.72) & 16.00\\
+Hebrew & 145 & 569(96.32) & 574(95.63) & -4.50\\
+Hindi & 78 & 630(88.25) & 662(89.42) & -32.50\\
+\addlinespace
+Hungarian & 129 & 623(94.90) & 646(95.22) & -22.50\\
+Norwegian & 123 & 585(95.87) & 608(95.93) & -23.00\\
+Polish & 50 & 595(94.83) & 585(95.00) & 10.00\\
+Portuguese & 5 & 579(96.67) & 576(98.33) & 3.00\\
+Simplified Chinese & 80 & 655(90.42) & 643(91.25) & 11.75\\
+\addlinespace
+Slovak & 137 & 620(128.16) & 608(94.28) & 12.00\\
+Spanish & 121 & 662(92.15) & 676(93.18) & -14.00\\
+Thai & 48 & 649(92.71) & 631(90.28) & 18.00\\
+Traditional Chinese & 92 & 633(93.66) & 629(93.30) & 4.00\\
+Turkish & 180 & 638(139.81) & 620(94.54) & 17.50\\
+\bottomrule
+\end{tabular}
+\end{table*}
+\begin{table*}[hbt]
+\ifnextchar[{\eatarg}{}
+
+
+\caption{\label{tab:summary-osweb}Median reaction times and accuracy percentages (in parentheses) per match condition (Mismatching, Matching); Match advantage (difference in response times) by language in the web-based data.}
+\centering
+\begin{tabular}[t]{lrrrr}
+\toprule
+Language & N & Mismatching & Matching & Match Advantage\\
+\midrule
+Arabic & 68 & 565(89.46) & 572(90.69) & -6.50\\
+Brazilian Portuguese & 49 & 633(94.56) & 617(94.56) & 16.00\\
+English & 750 & 554(93.48) & 547(93.79) & 6.75\\
+German & 134 & 582(95.65) & 558(95.34) & 23.75\\
+Norwegian & 21 & 622(96.03) & 589(94.84) & 33.00\\
+\addlinespace
+Portuguese & 54 & 644(96.14) & 589(95.06) & 55.25\\
+Serbian & 128 & 604(93.75) & 606(94.86) & -2.75\\
+Traditional Chinese & 57 & 600(92.54) & 583(94.30) & 17.00\\
+Turkish & 76 & 689(93.42) & 655(93.09) & 34.50\\
+\bottomrule
+\end{tabular}
+\end{table*}

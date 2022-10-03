@@ -402,6 +402,7 @@ linenumbers       : no
 mask              : no
 draft             : no
 keep_tex          : no
+replace_ampersands: no
 
 lang              : "en-US"
 documentclass     : "apa6"
@@ -440,7 +441,7 @@ output            :
 
 
 # Import multiple-bytes string in English system
-Sys.setlocale("LC_ALL","English") 
+#Sys.setlocale("LC_ALL","English") 
 ```
 
 
