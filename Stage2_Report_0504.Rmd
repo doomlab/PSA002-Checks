@@ -404,6 +404,7 @@ linenumbers       : no
 mask              : no
 draft             : no
 keep_tex          : no
+replace_ampersands: no
 
 lang              : "en-US"
 documentclass     : "apa6"

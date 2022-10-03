@@ -21,4 +21,14 @@ numeric(0)
 - Please note, the `rawdata` is assumed to be original - as it would be difficult to track. These files were uploaded in January and do not appear to have been changed. 
 - Each update to the methods/results was checked in the `check_changes` folder to show the differences in GitHub. 
 
+- Feb to May changes:
+  - I had fixed participants who accidentally got the same participant ID assigned twice. This code was turned off, and those participants were excluded without discussion. 
+  - The original outlier exclusion code was re-added - this is after discussion to use the new outlier exclusions and not implement this exclusion. It's implemented in strange places, but not necessarily across all the code. 
+  - Participants who did not perform at least 70% correct were added back in, which does not match the pre-registered rule. 
+  - The LME sections are difficult to judge, as they do not appear to match the suggested code, but I think this is just the way the markdowns appear. 
+  - You can see these changes by examining Table 1 and notice that new participants were included in the May edition because of the inclusion of inappropriate participants. 
+  - Other results show big changes - but this section included a big change to not run the LMEs separately. 
+  
+- May to August changes:
+
 
