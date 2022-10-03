@@ -29,13 +29,20 @@ numeric(0)
   - You can see these changes by examining Table 1 and notice that new participants were included in the May edition because of the inclusion of inappropriate participants. 
   - Other results show big changes - but this section included a big change to not run the LMEs separately. 
   
-- May to August changes:
+- May to August changes: [View differences](https://github.com/doomlab/PSA002-Checks/commit/020d9450aac0412536b4130657d61717e28d93fc)
   - In the method document, the birth year calculation is changed, unclear what is happening.
   - Additionally, the calculation of the number of labs is changed. 
   - A big section was moved from results to method. I did not check it line by line, and it likely has the same problems as described above (including ignoring the pre-registered 70% exclusion). 
   - At this point, the meta analysis code was moved to the separate file (and this document will run the newest version). This original excludes labs without discussion, but this was fixed in recent version.
-  - However, the *way* the meta-analysis was conducted is now completely different. Each language is run as a separate meta-analysis and then these are combined - whereas before, all labs were treated as separate entries into the meta analysis without the language clustering.  
+  - However, the *way* the meta-analysis was conducted is now completely different. Each language is run as a separate meta-analysis and then these are combined - whereas before, all labs were treated as separate entries into the meta analysis without the language clustering. With the original exclusion of labs (described above), the team was very concerned because the effect size of the match advantage went from non-significant to somewhat large. After we figured out this lab was excluded, we insisted this change be reverted, which is what is knitted in this document (i.e., I didn't separate different versions of the meta_all_plot.R file).  
   - The LMEs appear to be updated to the newer ones, but several are also eval = F, so somewhat unclear.
   - A big change to notice is that more participants than before are included (this is hard to see because Table 1 has been split into two tables, but there are more if you add English for example, you can also see that lower accuracy participants are not excluded by examining the accuracy percents next to Arabic). 
   
+- August to September changes:
+  - New participant inclusions are added - team had no idea this was added, unclear if appropriate. 
+  - New code to join and select data is added - no clue what this is doing. 
+  - The meta analysis is again modified without consultation of the team - it is now split by data source, after we decided that this should not be done because sources were found to be roughly similar. 
+  - The LME models were changed - not sure why. 
+  - The number of participants has again changed - some up and some down - it appears the accuracy filter may have been re-added, but since they are changing in both directions, it's unclear. 
+  - Please note I had to modify the method/results for this latest version quite and a bit, and I still couldn't get it to compile. 
 
