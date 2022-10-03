@@ -38,7 +38,7 @@ numeric(0)
   - The LMEs appear to be updated to the newer ones, but several are also eval = F, so somewhat unclear.
   - A big change to notice is that more participants than before are included (this is hard to see because Table 1 has been split into two tables, but there are more if you add English for example, you can also see that lower accuracy participants are not excluded by examining the accuracy percents next to Arabic). 
   
-- August to September changes:
+- August to September changes: [View differences](https://github.com/doomlab/PSA002-Checks/commit/40234c4fd15e25d1607a52b2a63704bc16e734a3)
   - New participant inclusions are added - team had no idea this was added, unclear if appropriate. 
   - New code to join and select data is added - no clue what this is doing. 
   - The meta analysis is again modified without consultation of the team - it is now split by data source, after we decided that this should not be done because sources were found to be roughly similar. 
