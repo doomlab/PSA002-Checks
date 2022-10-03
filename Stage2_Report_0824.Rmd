@@ -2,6 +2,8 @@
 title             : "Investigating Object Orientation Effects Across 18 Languages"
 shorttitle        : "OBJECT ORIENTATION EFFECTS"
 
+## Contributors table: https://docs.google.com/spreadsheets/d/1EquLYV4baIjYtfF8kxs6-w-aQig32s2gRT-w4wurhhw/edit#gid=0
+
 author: 
   - name          : "Sau-Chin Chen"
     affiliation   : "1"
@@ -376,7 +378,7 @@ authornote: |
   
   **Funding statement.** Below authors had the individual funds supporiting their participations. Glenn P. Williams was supported by the Leverhulme Trust Research Project Grant (RPG-2016-093). Krystian Barzykowski was supported by the National Science Centre, Poland (2019/35/B/HS6/00528). Zoltan Kekecs was supported by the János Bolyai Research Scholarship of the Hungarian Academy of Science. Erin Buchanan was supported by the National Institute on Mental Health (1R03MH110812-01). Patrícia Arriaga was supported by the Portuguese National Foundation for Science and Technology (UID/PSI/03125/2019). Gabriel Baník was supported by Charles University Grant Agency (PRIMUS/20/HUM/009).
   
-  **Ethical approval statement.** Authors who collected data on site and online had the ethical approval/agreement from the local institute. The latest status of ethical approval for all the participating authors is available at the public OSF folder (https://osf.io/e428p/ "IRB approvals" in Files).
+  **Ethical approval statement.** Authors who collected data on site and online had the ethical approval/agreement from their local institutions. The latest status of ethical approval for all the participating authors is available at the public OSF folder (https://osf.io/e428p/ “IRB approvals” in Files). 
   
   **Acknowledgement.** We appreciated the major contributions from the contributors as below. Chris Chartier and Jeremy Miller managed and monitored progress. Erin Buchanan provided guidelines to improve the inter-lab progress website management and managed the JATOS server for online data collection. Arti Parganiha, Asil Özdoğru, Attila Szuts, Babita Pande, Danilo Zambrano Ricaurte, Gabriel Baník, Harry Manley, Jonas Kunst, Krystian Barzykowski, Marco Antonio Correa Varella, Marietta Papadatou Pastou, Niv Reggev, Patrícia Arriaga, Stefan Stieger, Vanja Ković and Zahir Vally managed the material translation from English to the other languages. Roles of each collaborator are available in the public table (https://osf.io/mz97h/). We thank the suggestions from the editor and two reviewers on our first and second proposals. 
 
@@ -408,6 +410,7 @@ keep_tex          : no
 lang              : "en-US"
 documentclass     : "apa6"
 classoption       : "man"
+#latex_engine      : "xelatex"
 
 header-includes:
    - \usepackage{caption}
@@ -429,9 +432,11 @@ output            :
   library(data.table)
   library(lubridate)
   library(magrittr)
-#  library(flextable)
+  library(flextable)
   library(lme4)
   library(lmerTest)
+  #library(cAIC4)
+  library(parameters)
   library(metafor)
   library(afex)
   library(standardize)
@@ -448,7 +453,7 @@ Sys.setlocale("LC_ALL","English")
 
 <!---
 
-- [Revision at early 2020](https://docs.google.com/document/d/1vOnRY5WVZkhCCipJwrBcbIoaC7hPagYD7tgIUc8zlRU/edit#)
+- [Revision at google doc](https://docs.google.com/document/d/1vOnRY5WVZkhCCipJwrBcbIoaC7hPagYD7tgIUc8zlRU/edit#)
 
 --->
 
@@ -462,10 +467,10 @@ knitr::opts_chunk$set(cache.extra = knitr::rand_seed)
 ```
 
 
-```{r METHOD, child='Stage2_Method_0504.Rmd'}
+```{r METHOD, child='Stage2_Method_0824.Rmd'}
 ```
 
-```{r RESULTS, child='Stage2_Results_0504.Rmd'}
+```{r RESULTS, child='Stage2_Results_0824.Rmd'}
 ```
 
 ```{r DISCUSSION, child='Stage2_Discussion.Rmd', eval = F}
@@ -489,8 +494,8 @@ r_refs(file = "./includes/bib/Orientation across langauges.bib")
 \endgroup
 
 
-
+<!---
 \newpage
 
 # (APPENDIX) Appendix {-}
-
+--->

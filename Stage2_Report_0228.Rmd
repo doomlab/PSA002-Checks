@@ -456,17 +456,17 @@ set.seed(42)
 knitr::opts_chunk$set(cache.extra = knitr::rand_seed)
 ```
 
-```{r INTRO, child='Stage2_Introduction.Rmd'}
+```{r INTRO, child='Stage2_Introduction.Rmd', eval = F}
 ```
 
 
-```{r METHOD, child='Stage2_Method.Rmd'}
+```{r METHOD, child='Stage2_Method_0228.Rmd'}
 ```
 
-```{r RESULTS, child='Stage2_Results.Rmd'}
+```{r RESULTS, child='Stage2_Results_0228.Rmd'}
 ```
 
-```{r DISCUSSION, child='Stage2_Discussion.Rmd'}
+```{r DISCUSSION, child='Stage2_Discussion.Rmd', eval = F}
 ```
 
 
