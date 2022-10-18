@@ -48,3 +48,4 @@ po/*~
 # RStudio Connect folder
 rsconnect/
 check_changes/.DS_Store
+.DS_Store
