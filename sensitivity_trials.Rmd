@@ -1,0 +1,258 @@
+---
+title: "Sensitivity Trial Level Analysis"
+author: "Erin M. Buchanan"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+  library(data.table)
+  library(lubridate)
+  library(magrittr)
+  library(flextable)
+  library(lme4)
+  library(lmerTest)
+  #library(cAIC4)
+  library(parameters)
+  library(metafor)
+  library(afex)
+  library(standardize)
+  library(sjPlot)
+  library(ggplot2)
+  library("kableExtra")
+  library("papaja")
+```
+
+```{r analysis-preferences}
+# Seed for random number generation
+set.seed(42)
+knitr::opts_chunk$set(cache.extra = knitr::rand_seed)
+```
+
+## Load Data
+
+```{r load_info, message=FALSE, warning=FALSE, include=FALSE}
+# Load lab information
+# https://osf.io/dtfcg
+lab_info <-  dir(path = "..",full.names = TRUE, recursive = TRUE, include.dirs = TRUE, pattern = "Lab_info.csv")  %>%
+  read_csv()
+
+# https://osf.io/dtfcg
+lab_fin <-dir(path = "..",full.names = TRUE, recursive = TRUE, include.dirs = TRUE, pattern = "lab_fin.csv")  %>%
+  read_csv()
+
+# Load meta data of in-site data: age, female numbers
+# The information is summarized in "Participants".
+# https://osf.io/vnbkm
+insite_meta <- dir(path = "..",full.names = TRUE, recursive = TRUE, include.dirs = TRUE, pattern = "insite_meta.csv") %>%
+  read_csv() 
+
+# Load and summary meta data of online data: age, female numbers, language proficiency
+# The information is summarized in "Participants".
+# https://osf.io/3kx9r
+osweb_meta <- dir(path = "..",full.names = TRUE, recursive = TRUE, include.dirs = TRUE, pattern = "jatos_meta.csv") %>%
+  read_csv() %>%
+  mutate(gender = ifelse(gender==1,"FEMALE",ifelse(gender==2,"MALE","OTHER"))) %>%
+#  mutate(birth_year_tr = as.numeric(birth_year)) %>%
+  mutate(birth_year_tr = as.numeric(gsub(birth_year,pattern="NA|x",replacement = ""))) %>%
+  mutate(year = ifelse(birth_year_tr > 21 & !is.na(birth_year_tr), 1900 + birth_year_tr, 2000 + birth_year_tr)) %>%
+  mutate(age = ifelse(!is.na(year),2021-year,NA)) %>%
+  group_by(Batch) %>%
+  summarise(N = n(), Female_N = sum(gender=="FEMALE",na.rm = TRUE), Age = mean(age, na.rm=TRUE), Proficiency = mean(lang_prof))
+
+## count how many lab collected the data
+all_lab_ID = unique(c(insite_meta$PSA_ID,osweb_meta$Batch))
+lab_len = length(all_lab_ID) - 3 ## minus three additional Lab ID for non-native participants and Serbian subgroup.
+```
+
+```{r all_data, message=FALSE, warning=FALSE, include=FALSE}
+# Load raw SPV data 
+# Build data frame of valid SP verification responses
+# https://osf.io/xzwc4
+SP_V <-  dir(path = "..",
+      pattern = "all_rawdata_SP_V",   ## include in-site and internet data
+      recursive = TRUE, full.names = TRUE) %>% 
+      read_csv() %>%
+      inner_join(select(lab_info, PSA_ID, Language), by = "PSA_ID") %>%
+    distinct() %>% ## Merge the language aspects
+    mutate(Language = ifelse(Language == "Magyar", "Hungarian", Language)) %>%  ## Switch "Magyar" to "Hungrian"
+    mutate(Language = ifelse(Language == "Simple Chinese", "Simplified Chinese", Language)) %>%  ## Switch "Simple Chinese" to "Simplified Chinese"
+    filter(PSA_ID != "TUR_007E" & PSA_ID != "TWN_002E") %>% ## Exclude the data of non-native participants
+    mutate(PSA_ID = str_replace(PSA_ID, "SRB_002B", "SRB_002")) %>% ## Combine two Serbian language groups based on the collectors' recommendation
+    mutate(Source = if_else(opensesame_codename == "osweb","osweb","site"), 
+           Subject = paste0(Source,"_",PSA_ID,"_",subject_nr)) %>% ## Compose the unique participant id
+    subset(Match != "F") ## Exclude fillers in SP_V
+```
+
+```{r trials-fix}
+# deal with too many trials
+number_trials_start <- SP_V %>% 
+  group_by(Subject, Match, Target) %>% 
+  summarize(n_trials = n())
+
+# site_CAN_020_1 needs fixing
+SP_V$Subject[SP_V$Subject == "site_CAN_020_1"] <- 
+  c(rep("site_CAN_020_1", 24), rep("site_CAN_020_1_2", 24))
+
+# several have too many
+SP_V <- SP_V %>% 
+  group_by(Subject, Match, Target) %>% 
+  filter(!duplicated(Subject)) 
+```
+
+```{r site_SP_V, message=FALSE, warning=FALSE, include=FALSE}
+## `SP_V_subj_site` is for count checks. The outcomes are for counting total number in the report.
+
+## Summarize the valid participants' SP verification data
+SP_V_subj_site <- SP_V %>%
+    filter(opensesame_codename!="osweb") %>%  # exclude jatos data
+    group_by(Subject) %>%
+    mutate(acc = sum(correct)/n()) %>%
+    #mutate(acc = n()/24) %>%
+    filter(acc > .7) %>%
+    group_by(Language, PSA_ID, Subject, Match) %>%
+##    summarise(V_RT = median(response_time), V_Acc = n()/12)
+    summarise(V_RT = median(response_time), V_Acc = sum(correct)/n()) 
+
+## Tidy SP V data for mixed linear model in `SP-source-lme`. Acc < .70 are included.
+SP_V_site_tidy <- SP_V %>% 
+  filter(Source!="osweb")
+```
+
+```{r online_SP_V, message=FALSE, warning=FALSE, include=FALSE}
+## Tidy SP V data for mixed linear model in `SP-source-lme`. Acc < .70 are included.
+
+SP_V_osweb_tidy <-  SP_V %>%
+      filter(Source=="osweb") %>%   # include jatos data
+      #subset(correct == 1 & Match != "F") %>%  ## Exclude the incorrect responses and filler trials
+    subset(Match != "F") %>% 
+    distinct() %>% ## Merge the language aspects
+    filter(!(PSA_ID == "USA_033" & subject_nr == 39)) ## exclude this participant who had not complete PP
+```
+
+```{r preparation, message=FALSE, warning=FALSE, include=FALSE}
+## Check and combine the onsite data frame and online data frame sharing the same structure
+if(sum(names(SP_V_site_tidy) == names(SP_V_osweb_tidy)) == dim(SP_V_site_tidy)[2]){
+  SP_V_tidy = bind_rows(SP_V_site_tidy, SP_V_osweb_tidy)
+    chunk_msg01 <- c("All columns in SP_V matched")
+} else {
+  chunk_msg01 <- c("Not all columns in SP_V matched")
+}
+```
+
+```{r MAD_outliers}
+# We will implement a minimum response latency 160
+# We will use a 2*MAD criterion to eliminate long response latencies
+# SP_V_tidy and PP_tidy has the variable "Outlier" denoted the outlier.
+SP_V_tidy <- SP_V_tidy %>% 
+  group_by(Subject) %>% 
+  mutate(MAD = mad(response_time),
+         med = median(response_time),
+         Outlier = response_time <= 160 | response_time >= (med + 2*MAD)) 
+
+# Integrate this into the outlier analysis table, change out for lmer criterion and say why
+```
+
+```{r SP-lme-data, message=FALSE, warning=FALSE, include=FALSE}
+SP_V_lme_data <- SP_V_tidy %>% 
+   filter(Outlier == FALSE) %>%  ## excluded outliers by MAD
+  filter(Acc_bound == FALSE) %>% # remove people who were less than 70% so they don't match with join
+  mutate(Match = factor(Match,
+                        levels = c("Y","N"),
+                        labels = c("MATCHING","MISMATCHING")),
+                        Source = factor(Source, 
+                        levels = c("site","osweb"),
+                        labels = c("Site","Internet") ))
+
+```
+
+
+## Look at the number of trials
+
+```{r how-many}
+number_trials <- 
+  SP_V_lme_data %>% 
+  group_by(Subject, Match) %>% 
+  summarize(count = n())
+```
+
+## Run Models
+
+```{r SP-lang-lme, message=FALSE, warning=FALSE}
+
+models <- list()
+
+for (i in 4:8){
+  
+  subjects <- number_trials %>% 
+    filter(count >= i) %>%
+    pull(Subject) %>% unique()
+  
+  temp_data <- SP_V_lme_data %>% 
+    filter(Subject %in% subjects)
+  
+  #only intercept
+  models[[paste("intercept.model", i, sep = "_")]] <- lm(response_time ~ 1, 
+                        data = temp_data)
+  #add random intercept of subject
+  models[[paste("subject.model", i, sep = "_")]] <- lmer(response_time ~ 1 + (1|Subject), 
+                        control = lmerControl(optimizer = "bobyqa",
+                                              optCtrl = list(maxfun = 1e6)), 
+                        data = temp_data)
+  # add random intercept of item
+  models[[paste("item.model", i, sep = "_")]] <- lmer(response_time ~ 1 + (1|Subject) + (1|Target), 
+                        control = lmerControl(optimizer = "bobyqa",
+                                              optCtrl = list(maxfun = 1e6)), 
+                        data = temp_data)
+  # add random intercept of lab
+  models[[paste("lab.model", i, sep = "_")]] <- lmer(response_time ~ 1 + (1|Subject) + (1|Target) + (1|PSA_ID), 
+                        control = lmerControl(optimizer = "bobyqa",
+                                              optCtrl = list(maxfun = 1e6)), 
+                        data = temp_data)
+  
+  # add random intercept of language
+  models[[paste("language.model", i, sep = "_")]] <- lmer(response_time ~ 1 + (1|Subject) + (1|Target) + (1|PSA_ID) + (1|Language), 
+                        control = lmerControl(optimizer = "bobyqa",
+                                              optCtrl = list(maxfun = 1e6)), 
+                        data = temp_data)
+  
+  # add fixed effect of match 
+  models[[paste("fixed.four.model", i, sep = "_")]] <- lmer(response_time ~ Match + (1|Subject) + (1|Target) + (1|PSA_ID) + (1|Language) , 
+                        control = lmerControl(optimizer = "bobyqa",
+                                              optCtrl = list(maxfun = 1e6)), 
+                        data = temp_data)
+    
+}
+
+
+```
+
+## View the Results
+
+```{r results-sensitive}
+AIC_values <- as.data.frame(unlist(lapply(models, AIC))) %>% 
+  rename("AIC" = "unlist(lapply(models, AIC))")
+AIC_values$model <- rownames(AIC_values)
+
+AIC_values <- tidyr::separate(AIC_values, 
+                model, 
+                into = c("model", "number_trials"),
+                sep = "_") %>% 
+  pivot_wider(data = ., 
+              id_cols = c(number_trials),
+              values_from = AIC,
+              names_from = model)
+
+AIC_values
+```
+
+```{r}
+fixef(models$fixed.four.model_4)
+fixef(models$fixed.four.model_5)
+fixef(models$fixed.four.model_6)
+fixef(models$fixed.four.model_7)
+fixef(models$fixed.four.model_8)
+```
+
