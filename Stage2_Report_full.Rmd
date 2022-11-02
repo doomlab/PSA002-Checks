@@ -375,56 +375,55 @@ affiliation:
 
 authornote: |
   **Author contributions**: Sau-Chin Chen contributed to the study concept, the design analysis protocol and wrote the initial report draft. Patrick Forscher, Pablo Bernabeu, Balazs Aczel and Attila Szuts improved the analysis protocol. Zoltan Kekecs, Jeremy K. Miller and Anna Szabelska managed the project administration which was established by Christopher R. Chartier. All the rest of authors contributed to the material prepation and data collection. All authors commented on previous versions of the manuscript, read and approved the final manuscript.
-  
+
   **Funding statement.** Below authors had the individual funds supporiting their participations. Glenn P. Williams was supported by the Leverhulme Trust Research Project Grant (RPG-2016-093). Krystian Barzykowski was supported by the National Science Centre, Poland (2019/35/B/HS6/00528). Zoltan Kekecs was supported by the János Bolyai Research Scholarship of the Hungarian Academy of Science. Erin Buchanan was supported by the National Institute on Mental Health (1R03MH110812-01). Patrícia Arriaga was supported by the Portuguese National Foundation for Science and Technology (UID/PSI/03125/2019). Gabriel Baník was supported by Charles University Grant Agency (PRIMUS/20/HUM/009).
-  
-  **Ethical approval statement.** Authors who collected data on site and online had the ethical approval/agreement from their local institutions. The latest status of ethical approval for all the participating authors is available at the public OSF folder (https://osf.io/e428p/ “IRB approvals” in Files). 
-  
+
+  **Ethical approval statement.** Authors who collected data on site and online had the ethical approval/agreement from their local institutions. The latest status of ethical approval for all the participating authors is available at the public OSF folder (https://osf.io/e428p/ “IRB approvals” in Files).
+
   **Acknowledgement.** We appreciated the major contributions from the contributors as below. Chris Chartier and Jeremy Miller managed and monitored progress. Erin Buchanan provided guidelines to improve the inter-lab progress website management and managed the JATOS server for online data collection. Arti Parganiha, Asil Özdoğru, Attila Szuts, Babita Pande, Danilo Zambrano Ricaurte, Gabriel Baník, Harry Manley, Jonas Kunst, Krystian Barzykowski, Marco Antonio Correa Varella, Marietta Papadatou Pastou, Niv Reggev, Patrícia Arriaga, Stefan Stieger, Vanja Ković and Zahir Vally managed the material translation from English to the other languages. Roles of each collaborator are available in the public table (https://osf.io/mz97h/). We thank the suggestions from the editor and two reviewers on our first and second proposals. 
 
-abstract: |
-  Mental simulation theories of language comprehension propose that people automatically create mental representations of objects mentioned in sentences. Representation is often measured with the sentence-picture verification task, in which participants first read a sentence and, on a following screen, see a picture of an object. Participants then verify whether the latter object had been mentioned in the sentence. Crucially, two covert conditions exist: the sentence and the picture can either match or mismatch in terms of a perceptual property, including object orientation, shape, color and size. The key finding obtained in some studies is the match advantage, whereby responses were faster in the match condition; however, object orientation results are often inconsistent inconsistent findings across languages. This registered report describes our investigation of the match advantage of object orientation across 18 languages, which was undertaken by 33 laboratories and organized by the Psychological Science Accelerator. The preregistered analysis revealed that the match advantage was supported either overall or in any specific language. 
 
-##We discuss the need for sample sizes that are far larger than usual, which are unequally accessible in different languages. 
-
+abstract: "(ref:abstract)"
+  
 keywords          : "mental simulation, object orientation, mental rotation, language comprehension"
 wordcount         : "5,138 words in total; Introduction: 1,242 words"
 
-## Change for notes:
-## Not sure where are the problems. In the previous render, the citations could be 
-
-bibliography: "./includes/bib/Orientation across langauges.bib"
-csl         : "./includes/bib/apa7.csl"
-
-#appendix          : 
-#  - "Stage2_app01.Rmd"
-#  - "Stage2_app02.Rmd"
-#  - "Stage2_app03.Rmd"
-floatsintext      : yes
+floatsintext      : no
 figurelist        : no
-figsintext        : yes
 tablelist         : no
 footnotelist      : no
-linenumbers       : no
+linenumbers       : yes
 mask              : no
 draft             : no
-keep_tex          : no
-
-lang              : "en-US"
-documentclass     : "apa6"
+#documentclass     : "apa6"
 classoption       : "man"
-latex_engine      : "xelatex"
+#output            : papaja::apa6_pdf
+editor_options: 
+  markdown: 
+    wrap: 72
+bibliography: psa002.bib
 
 header-includes:
-   - \usepackage{caption}
-   - \usepackage{float}
-   
-output            : 
-  papaja::apa6_pdf:
-    citation_package: biblatex
-#    includes:
-#      after_body: app01.tex
+  - |
+    \makeatletter
+    \renewcommand{\paragraph}{\@startsection{paragraph}{4}{\parindent}%
+      {0\baselineskip \@plus 0.2ex \@minus 0.2ex}%
+      {-1em}%
+      {\normalfont\normalsize\bfseries\typesectitle}}
+    
+    \renewcommand{\subparagraph}[1]{\@startsection{subparagraph}{5}{1em}%
+      {0\baselineskip \@plus 0.2ex \@minus 0.2ex}%
+      {-\z@\relax}%
+      {\normalfont\normalsize\bfseries\itshape\hspace{\parindent}{#1}\textit{\addperi}}{\relax}}
+    \makeatother
+
+csl               : "`r system.file('rmd', 'apa7.csl', package = 'papaja')`"
+documentclass     : "apa7"
+output            : papaja::apa6_pdf
 ---
+
+
+(ref:abstract) Mental simulation theories of language comprehension propose that people automatically create mental representations of objects mentioned in sentences. Representation is often measured with the sentence-picture verification task, in which participants first read a sentence and, on a following screen, see a picture of an object. Participants then verify whether the latter object had been mentioned in the sentence. Crucially, two covert conditions exist: the sentence and the picture can either match or mismatch in terms of a perceptual property, including object orientation, shape, color and size. The key finding obtained in some studies is the match advantage, whereby responses were faster in the match condition; however, object orientation results are often inconsistent inconsistent findings across languages. This registered report describes our investigation of the match advantage of object orientation across 18 languages, which was undertaken by 33 laboratories and organized by the Psychological Science Accelerator. The preregistered analysis revealed that the match advantage was supported either overall or in any specific language. 
 
 ```{r setup, include = FALSE}
   knitr::opts_chunk$set(
@@ -509,15 +508,15 @@ firstup <- function(x) {
 
 # Introduction
 
-Mental simulation of object properties is a major topic in conceptual processing research [@ostarekSixChallengesEmbodiment2019a; @scorolli2014embodiment]. Theoretical frameworks of conceptual processing demonstrate the integration of linguistic representations and situated simulation [e.g., @barsalou_grounded_2008; @zwaan_embodiment_2014]. Proponents of situated cognition assume that perceptual representations are able to be generated during language processing. Recently, some neuroimaging studies are testing this hypothesis on the cortical activation patterns from seeing visual images and reading text [see the summary of @ostarekSixChallengesEmbodiment2019a, p. 596].
+Mental simulation of object properties is a major topic in conceptual processing research [@ostarekSixChallengesEmbodiment2019; @scorolli2014embodiment]. Theoretical frameworks of conceptual processing demonstrate the integration of linguistic representations and situated simulation [e.g., @barsalou_grounded_2008; @zwaan_embodiment_2014]. Proponents of situated cognition assume that perceptual representations are able to be generated during language processing. Recently, some neuroimaging studies are testing this hypothesis on the cortical activation patterns from seeing visual images and reading text [see the summary of @ostarekSixChallengesEmbodiment2019, p. 596].
 
-One empirical index of situated simulation is the mental simulation effects measured in sentence-picture verification (see Figure \@ref(fig:fig01) ). This task requires participants to read a probe sentence displayed on the screen. On the following screen, the participants see a picture of an object and must verify whether the object was mentioned in the probe sentence. Response times to the pictures are summarized as the mental simulation effects, which occurs when people are faster to verify pictured objects whose properties match those of objects implied in the probe sentences. Mental simulation effects have been demonstrated for object shape [@zwaanLanguageComprehendersMentally2002], color [@connellRepresentingObjectColour2007], and orientation [@stanfield_effect_2001]. Subsequent replication studies revealed consistent results for the shape but inconsistent findings for the color and orientation effects [@koning_mental_2017; @rommersObjectShapeOrientation2013; @zwaanRevisitingMentalSimulation2012], and the theoretical frameworks do not provide researchers much guidance regarding the potential causes for this discrepancy. With the accumulating concerns about the lack of reproducibility, researchers have found it challenging to update the theoretical framework in terms of mental simulation effects being unreplicable [e.g., @kaschakEmbodimentLabTheory2021]. Researchers who intended to improve the theoretical framework necessarily require a reproducible protocol for measuring the mental simulation effects. 
+One empirical index of situated simulation is the mental simulation effects measured in sentence-picture verification (see Figure \@ref(fig:fig01)). This task requires participants to read a probe sentence displayed on the screen. On the following screen, the participants see a picture of an object and must verify whether the object was mentioned in the probe sentence. Response times to the pictures are summarized as the mental simulation effects, which occurs when people are faster to verify pictured objects whose properties match those of objects implied in the probe sentences. Mental simulation effects have been demonstrated for object shape [@zwaanLanguageComprehendersMentally2002], color [@connellRepresentingObjectColour2007], and orientation [@stanfield_effect_2001]. Subsequent replication studies revealed consistent results for the shape but inconsistent findings for the color and orientation effects [@koning_mental_2017; @rommersObjectShapeOrientation2013; @zwaanRevisitingMentalSimulation2012], and the theoretical frameworks do not provide researchers much guidance regarding the potential causes for this discrepancy. With the accumulating concerns about the lack of reproducibility, researchers have found it challenging to update the theoretical framework in terms of mental simulation effects being unreplicable [e.g., @kaschakEmbodimentLabTheory2021]. Researchers who intended to improve the theoretical framework necessarily require a reproducible protocol for measuring the mental simulation effects. 
 
 
 (Insert Figure \@ref(fig:fig01) about here)
 
 
-```{r fig01, echo=FALSE, message=FALSE, warning=FALSE, results='asis', paged.print=TRUE, fig.cap="Procedure of sentence-picture verification task.", eval = F}
+```{r fig01, echo=FALSE, message=FALSE, warning=FALSE, results='asis', paged.print=TRUE, fig.cap="Procedure of sentence-picture verification task."}
 knitr::include_graphics("includes/fig/fig2a.png")
 
 ## Note for changes:
@@ -1199,7 +1198,7 @@ write_csv(SP_V_tidy, file="includes/files/SP_V_lme_data.csv")
 ```
 
 
-```{r SP-lang-lme, message=FALSE, warning=FALSE}
+```{r SP-lang-lme, message=FALSE, warning=FALSE, include=FALSE}
 
 ## Erin's update
 
@@ -1298,7 +1297,7 @@ SP_lme02_out <- round(summary(fixed.randomslope.model)$coefficients["MatchMISMAT
 **Evaluating match advantages using linear mixed-effects models.** As with the analysis plan, the null-effect model of sentence-picture verification data converged at all random intercept factors: participants, items, laboratories, and languages, AIC = `r format(section_01_AIC, big_mark=",")`, BIC = `r format(section_01_BIC, big_mark=",")`; the fixed-effect model either converged at all random intercept factors, AIC = `r format(section_02_AIC, big_mark=",")`, BIC = `r format(section_02_BIC, big_mark=",")`. The fixed-effect model was not significantly different form the null-effect model,  ${\chi}^2$ `r paste0("(",model_test01[1],",",model_test01[2],") = ",model_test01[3], ", *p* = ", model_test01[4])`, and did not reveal a significant effect of match advantage: `r paste0("*b* = ", SP_lme01_out["Estimate"], ", *SE* = ",SP_lme01_out["Std. Error"],", t(",SP_lme01_out["df"],") = ",SP_lme01_out["t value"], ", *p* = ",SP_lme01_out["Pr(>|t|)"])`. The exploratory analysis evaluated the model with highest theoretical interest that had a random slope of matching condition on language. This model converged at the random intercepts of participants, items, laboratories, and matching conditions on language, AIC = `r format(section_03_AIC, big_mark=",")`, BIC = `r format(section_03_BIC, big_mark=",")`. This model was not significant different from the null-effect model, ${\chi}^2$ `r paste0("(",model_test02[1],",",model_test02[2],") = ",model_test02[3], ", *p* = ", model_test02[4])`, and showed no significant effect of match advantage: `r paste0("*b* = ", SP_lme02_out["Estimate"], ", *SE* = ",SP_lme02_out["Std. Error"],", t(",SP_lme02_out["df"],") = ",SP_lme02_out["t value"], ", *p* = ",SP_lme02_out["Pr(>|t|)"])`. 
 
 
-```{r SP-ger-lme, message=FALSE, warning=FALSE}
+```{r SP-ger-lme, message=FALSE, warning=FALSE, include=FALSE}
 #null-effect model without random intercepts
 german.intercept.model <- lm(response_time ~ 1, 
                       data = subset(SP_V_lme_data,Language == "German"))
@@ -1365,7 +1364,7 @@ GER2_lme_out <- round(summary(german.fixed.two.model)$coefficients["MatchMISMATC
 We conducted mixed-effect models on German data because this was the only language indicating a significant match advantage in the meta-analysis. The null-effect model converged at the random intercept factors of participants and items but laboratories, AIC = `r format(section01_GER_AIC, big_mark=",")`, BIC = `r format(section01_GER_BIC, big_mark=",")`; the fixed-effect model either converged at the random intercept factors of participants and items, AIC = `r format(section02_GER_AIC, big_mark=",")`, BIC = `r format(section02_GER_BIC, big_mark=",")`. The fixed-effect model was not significantly different from the null-effect model, ${\chi}^2$ = `r paste0("(",ger_model_test01[1],",",ger_model_test01[2],") = ",ger_model_test01[3], ", *p* = ", ger_model_test01[4])`, and did not revealed the significant match advantage: `r paste0("*b* = ", GER2_lme_out["Estimate"], ", *SE* = ",GER2_lme_out["Std. Error"],", *t*(",GER2_lme_out["df"],") = ",GER2_lme_out["t value"], ", *p* = ",GER2_lme_out["Pr(>|t|)"])`. All the details of the above fixed effects and random intercepts are summarized in Appendix 4.
 
 
-```{r table-SP-lme-coef, eval=FALSE, message=FALSE, warning=FALSE, include=FALSE}
+```{r SP-lme-coef, message=FALSE, warning=FALSE, include=FALSE}
 ## Manage the SP effect CI table
 ##source("includes/files/lme_SPV_effects.R")  ## backup all code into single script for safe
 
@@ -1692,7 +1691,7 @@ SPV_effect_table <- data.frame(
 
 
 
-```{r PP_data_preparation, message=FALSE, warning=FALSE}
+```{r PP-data-preparation, message=FALSE, warning=FALSE, include=FALSE}
 ## Dataset for mixed-effect model
 PP_lme_data <- PP_tidy %>% 
   filter(Outlier == FALSE) %>% #filter outlier by time rule established above
@@ -1707,7 +1706,7 @@ write_csv(PP_tidy, file="includes/files/PP_lme_data.csv")
 
 
 
-```{r PP_null_lme, message=FALSE, warning=FALSE, include=FALSE}
+```{r PP-null-lme, message=FALSE, warning=FALSE, include=FALSE}
 
 PP.intercept.lme <- lm(response_time ~ 1,
                     data = PP_lme_data
@@ -1756,7 +1755,7 @@ section01_PP_BIC <- BIC(PP.lang.lme) # Presentation in text
 ```
 
 
-```{r PP_source_lme, message=FALSE, warning=FALSE, include=FALSE}
+```{r PP-source-lme, message=FALSE, warning=FALSE, include=FALSE}
 
 PP.source.lme <- lmerTest::lmer(response_time ~ 
                    Source +                # Fixed effect
@@ -1783,7 +1782,7 @@ pp_source_out <- round(summary(PP.source.lme)$coefficients["Sourcesite",],3)
 ```
 
 
-```{r PP_rotation_lme, message=FALSE, warning=FALSE}
+```{r PP-rotation-lme, message=FALSE, warning=FALSE, include=FALSE}
 ## Additive fixed effects of mental rotation scores and languages
 PP.lang.add.lme <- lmerTest::lmer(response_time ~ 
                     Identical +                # Fixed effect
@@ -1833,10 +1832,8 @@ pp_lme_out <- round(summary(PP.lang.inter.lme)$coefficients["Identical0DIFF",],3
 ```
 
 
-**Analysis of mental rotation scores.** Followed the analysis plan on the sentence-picture verification data, the analysis on picture-picture verification data at first confirmed the null-effect model converged at all random intercept factors of participants, items, laboratories, and languages, AIC = `r format(section01_PP_AIC, big_mark=",")`, BIC = `r format(section01_PP_BIC, big_mark=",")`. To evaluate the affection of data collection sources, we compared the fixed-effect model of data sources and the null-effect model. This fixed-effect model converged at the all random intercept factors, AIC = `r format(section02_PP_AIC, big_mark=",")`, BIC = `r format(section02_PP_BIC, big_mark=",")`, but was not significantly different from the null-effect model, ${\chi}^2$ `r paste0("(",PP_model_test00[1],",",PP_model_test00[2],") = ",PP_model_test00[3], ", *p* = ", PP_model_test00[4])`. 
 
-
-```{r table-PP-lme-coef, message=FALSE, warning=FALSE, include=FALSE}
+```{r PP-lme-coef, message=FALSE, warning=FALSE, include=FALSE}
 ## Manage the PP effect CI table
 ## source("includes/files/lme_PP_effects.R") 
 
@@ -2162,33 +2159,36 @@ PP_effect_table <- data.frame(
              tc.ci,
              turkish.ci)
 )
-
 ```
 
 
-```{r table-lme-coef, eval=FALSE, message=FALSE, warning=FALSE, include=FALSE, paged.print=TRUE}
+
+```{r lme-coef, echo=FALSE, message=FALSE, warning=FALSE, paged.print=TRUE}
 ## Merge SPV and PP effect tables
-effect_table <- SPV_effect_table %>% left_join(
+#effect_table <- 
+SPV_effect_table %>% left_join(
   PP_effect_table, by = "Language"
-) 
+) %>% 
 ## Caption of this table can not be rendered in output pdf.
-effect_table %>%
- kable(  
+#effect_table %>%
+ kable(
     format = "latex",
     booktabs = TRUE,
     escape=FALSE,
     col.names = c("Language","Match Advantage","Mental Rotation Score"),
     align = c("l","r","r"),
-   caption = "Estimated effects and 95 % confidence interval grouped by languages."
+   caption = "Estimated effects and 95\\% confidence interval grouped by languages."
     )
 ## Note for changes:
 ## This table was based on Zolten's suggestion. Because of some package problem, this chunk is disable.
 ```
 
 
-The planned analysis treated the discrepancy of object orientation settings as the mental rotation scores. The models included the orientation setting as the only one fixed effect converged at all the random intercepts of participants, items, laboratories and orientation setting on languages, AIC = `r format(PP_inter_AIC, big_mark=",")`, BIC = `r format(PP_inter_BIC, big_mark=",")`, rather than at the  random intercepts of participants, items, laboratories and language, AIC = `r format(PP_add_AIC, big_mark=",")`, BIC = `r format(PP_add_BIC, big_mark=",")`. There was significant difference between the two models, ${\chi}^2$ `r paste0("(",PP_model_test02[1],",",PP_model_test02[2],") = ",PP_model_test02[3], ", *p* = ", PP_model_test02[4])`, and the latter model indicated the significant mental rotation scores, `r paste0("*b* = ", pp_lme_out["Estimate"], ", *SE* = ",pp_lme_out["Std. Error"],", *t*(",pp_lme_out["df"],") = ",pp_lme_out["t value"], ", *p* < .001")`.  The coefficients of all considered mixed-effects models are reported in Appendix 5. Table \@ref(tab:table-lme-coef) summarized the language-specific mental rotation scores estimated by the mixed-effect models. 
+**Analysis of mental rotation scores.** Followed the analysis plan on the sentence-picture verification data, the analysis on picture-picture verification data at first confirmed the null-effect model converged at all random intercept factors of participants, items, laboratories, and languages, AIC = `r format(section01_PP_AIC, big_mark=",")`, BIC = `r format(section01_PP_BIC, big_mark=",")`. To evaluate the affection of data collection sources, we compared the fixed-effect model of data sources and the null-effect model. This fixed-effect model converged at the all random intercept factors, AIC = `r format(section02_PP_AIC, big_mark=",")`, BIC = `r format(section02_PP_BIC, big_mark=",")`, but was not significantly different from the null-effect model, ${\chi}^2$ `r paste0("(",PP_model_test00[1],",",PP_model_test00[2],") = ",PP_model_test00[3], ", *p* = ", PP_model_test00[4])`. 
 
-(Insert Table \@ref(tab:table-lme-coef) about here) 
+The planned analysis treated the discrepancy of object orientation settings as the mental rotation scores. The models included the orientation setting as the only one fixed effect converged at all the random intercepts of participants, items, laboratories and orientation setting on languages, AIC = `r format(PP_inter_AIC, big_mark=",")`, BIC = `r format(PP_inter_BIC, big_mark=",")`, rather than at the  random intercepts of participants, items, laboratories and language, AIC = `r format(PP_add_AIC, big_mark=",")`, BIC = `r format(PP_add_BIC, big_mark=",")`. There was significant difference between the two models, ${\chi}^2$ `r paste0("(",PP_model_test02[1],",",PP_model_test02[2],") = ",PP_model_test02[3], ", *p* = ", PP_model_test02[4])`, and the latter model indicated the significant mental rotation scores, `r paste0("*b* = ", pp_lme_out["Estimate"], ", *SE* = ",pp_lme_out["Std. Error"],", *t*(",pp_lme_out["df"],") = ",pp_lme_out["t value"], ", *p* < .001")`.  The coefficients of all considered mixed-effects models are reported in Appendix 5. Table \@ref(tab:lme-coef) summarized the language-specific mental rotation scores estimated by the mixed-effect models. 
+
+(Insert Table \@ref(tab:lme-coef) about here) 
 
 
 ```{r prediction_data, message=FALSE, warning=FALSE, include=FALSE}
@@ -2234,12 +2234,14 @@ Ger_result <- summary(Ger_model0)$coef["Imagery",]
 ```
 
 
-```{r prediction-table, eval=FALSE, message=FALSE, warning=FALSE, include=FALSE, paged.print=TRUE}
-lang_reults$table %>% kable(  
+```{r prediction-coef, echo=FALSE, message=FALSE, warning=FALSE, paged.print=TRUE}
+
+lang_reults$table %>% as.data.frame() %>% 
+  kable(  
     format = "latex",
     booktabs = TRUE,
     escape=FALSE,
-    col.names = c("Predictor","b","95% CI","t","df", "p"),
+    col.names = c("Predictor","b","95\\% CI","t","df", "p"),
     align = c("l","r","r","r","r","r"),
    caption = "Regression coefficient generated from the mental rotation scores. Dependent variable is the match advantages."
     )
@@ -2247,9 +2249,9 @@ lang_reults$table %>% kable(
 ## This table was based on Zolten's suggestion. Because of some package problem, this chunk is disable.
 ```
 
-**Prediction model of match advantages.** The last preregistered plan was to build the regression model that could predict the match advantages by the mental rotation scores. If mental rotation scores predicted match advantage, the regression model with languages and mental rotation scores should fit the data better than the regression model with languages only. However, the model comparison indicated the better fitted regression model had languages only, *F* < 1. As Table \@ref(tab:prediction-table) illustrated, none of the language set of mental rotation scores sufficiently predict the match advantages.
+**Prediction model of match advantages.** The last preregistered plan was to build the regression model that could predict the match advantages by the mental rotation scores. If mental rotation scores predicted match advantage, the regression model with languages and mental rotation scores should fit the data better than the regression model with languages only. However, the model comparison indicated the better fitted regression model had languages only, *F* < 1. As Table \@ref(tab:prediction-coef) illustrated, none of the language set of mental rotation scores sufficiently predict the match advantages.
 
-(Insert Table \@ref(tab:prediction-table) about here)
+(Insert Table \@ref(tab:prediction-coef) about here)
 
 
 # Discussion

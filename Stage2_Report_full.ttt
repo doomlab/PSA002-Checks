@@ -1,0 +1,106 @@
+\begin{table*}[hbt]
+\ifnextchar[{\eatarg}{}
+
+
+\caption{\label{tab:summary-languages}Descriptive statistics by language: Total sample size, Average accuracy percentage, Median response times and median absolute deviations (in parentheses) per match condition (Mismatching, Matching); Match advantage (difference in response times).}
+\centering
+\begin{tabular}[t]{llrrrr}
+\toprule
+Language & N & Accuracy Percentages & Mismatching & Matching & Match Advantage\\
+\midrule
+Arabic & 106 & 77 & 525(213.12) & 524(234.62) & 0.75\\
+Brazilian Portuguese & 50 & 94 & 637(154.19) & 638(146.04) & -1.75\\
+English & 1363 & 93 & 573(132.69) & 570(134.18) & 3.50\\
+German & 233 & 125 & 585(100.08) & 568(103.78) & 17.00\\
+Greek & 98 & 89 & 748(217.20) & 735(243.89) & 12.75\\
+\addlinespace
+Hebrew & 146 & 96 & 582(100.82) & 583(114.90) & -0.25\\
+Hindi & 79 & 88 & 640(200.15) & 669(241.66) & -29.00\\
+Hungarian & 129 & 95 & 626(117.13) & 648(132.69) & -22.00\\
+Norwegian & 144 & 96 & 592(126.39) & 608(134.92) & -15.50\\
+Polish & 50 & 95 & 597(136.03) & 594(117.87) & 3.25\\
+\addlinespace
+Portuguese & 60 & 95 & 629(130.84) & 592(131.58) & 36.75\\
+Serbian & 130 & 93 & 606(151.97) & 610(160.49) & -4.00\\
+Simplified Chinese & 81 & 90 & 702(195.70) & 660(166.05) & 42.00\\
+Slovak & 138 & 110 & 620(120.09) & 616(119.35) & 4.00\\
+Spanish & 127 & 91 & 668(165.31) & 683(156.41) & -14.50\\
+\addlinespace
+Thai & 50 & 90 & 664(160.12) & 656(156.41) & 8.75\\
+Traditional Chinese & 150 & 93 & 626(133.06) & 618(126.02) & 7.50\\
+Turkish & 262 & 109 & 661(157.16) & 640(134.92) & 21.00\\
+\bottomrule
+\end{tabular}
+\end{table*}
+\efloatseparator
+ 
+\begin{table*}[hbt]
+\ifnextchar[{\eatarg}{}
+
+
+\caption{\label{tab:lme-coef}Estimated effects and 95\% confidence interval grouped by languages.}
+\centering
+\begin{tabular}[t]{lrr}
+\toprule
+Language & Match Advantage & Mental Rotation Score\\
+\midrule
+Arabic & -10.23 [ -29.22 , 3.72 ] & 23.38 [ 15.74 , 28.99 ]\\
+Brazilian Portuguese & -0.03 [ -20.87 , 15.27 ] & 25.22 [ 15.48 , 32.37 ]\\
+English & -1.01 [ -4.26 , 1.37 ] & 31.6 [ 29.78 , 32.94 ]\\
+German & 5.75 [ -0.73 , 10.5 ] & 30.12 [ 26.32 , 32.92 ]\\
+Greek & 10.39 [ -6.16 , 22.55 ] & 28.53 [ 21.36 , 33.79 ]\\
+\addlinespace
+Hebrew & -3.76 [ -12.6 , 2.74 ] & 27.47 [ 22.6 , 31.05 ]\\
+Hindi & -16.62 [ -35.53 , -2.73 ] & 35.68 [ 28.18 , 41.19 ]\\
+Hungarian & -4.19 [ -14.92 , 3.68 ] & 25.41 [ 20.19 , 29.25 ]\\
+Norwegian & 6.31 [ -3.08 , 13.21 ] & 27.65 [ 22.4 , 31.5 ]\\
+Polish & -1.28 [ -17.51 , 10.63 ] & 35.18 [ 27.75 , 40.63 ]\\
+\addlinespace
+Portuguese & 13.28 [ -2.53 , 24.89 ] & 35.21 [ 26.69 , 41.47 ]\\
+Serbian & 2.76 [ -7.83 , 10.54 ] & 27.42 [ 21.77 , 31.56 ]\\
+Simplified Chinese & 8.72 [ -6.96 , 20.25 ] & 30.03 [ 22.6 , 35.48 ]\\
+Slovak & 2.71 [ -7.64 , 10.32 ] & 32.32 [ 26.95 , 36.27 ]\\
+Spanish & 5.07 [ -9 , 15.41 ] & 38.27 [ 30.64 , 43.88 ]\\
+\addlinespace
+Thai & -2.7 [ -20.58 , 10.43 ] & 31.89 [ 23.97 , 37.71 ]\\
+Traditional Chinese & 1.82 [ -8.37 , 9.31 ] & 28.63 [ 23.74 , 32.22 ]\\
+Turkish & 2.81 [ -5.85 , 9.17 ] & 36.43 [ 31.78 , 39.84 ]\\
+\bottomrule
+\end{tabular}
+\end{table*}
+\efloatseparator
+ 
+\begin{table*}[hbt]
+\ifnextchar[{\eatarg}{}
+
+
+\caption{\label{tab:prediction-coef}Regression coefficient generated from the mental rotation scores. Dependent variable is the match advantages.}
+\centering
+\begin{tabular}[t]{lrrrrr}
+\toprule
+Predictor & b & 95\% CI & t & df & p\\
+\midrule
+Intercept & -6.42 & {}[-23.19, 10.35] & -0.75 & 3366 & .453\\
+Brazilian Portuguese & -5.59 & {}[-35.21, 24.03] & -0.37 & 3366 & .711\\
+English & 5.58 & {}[-11.84, 22.99] & 0.63 & 3366 & .530\\
+German & 13.60 & {}[-6.66, 33.86] & 1.32 & 3366 & .188\\
+Greek & 14.50 & {}[-9.70, 38.69] & 1.17 & 3366 & .240\\
+\addlinespace
+Hebrew & 5.00 & {}[-17.07, 27.06] & 0.44 & 3366 & .657\\
+Hindi & -12.30 & {}[-38.06, 13.45] & -0.94 & 3366 & .349\\
+Hungarian & -5.06 & {}[-27.70, 17.57] & -0.44 & 3366 & .661\\
+Norwegian & 12.07 & {}[-10.09, 34.24] & 1.07 & 3366 & .286\\
+Polish & 4.90 & {}[-24.72, 34.52] & 0.32 & 3366 & .746\\
+\addlinespace
+Portuguese & 19.28 & {}[-8.62, 47.17] & 1.35 & 3366 & .176\\
+Serbian & 5.82 & {}[-16.82, 28.46] & 0.50 & 3366 & .614\\
+Simplified Chinese & 24.29 & {}[-1.28, 49.86] & 1.86 & 3366 & .063\\
+Slovak & 9.44 & {}[-12.89, 31.78] & 0.83 & 3366 & .407\\
+Spanish & 5.54 & {}[-17.18, 28.26] & 0.48 & 3366 & .632\\
+\addlinespace
+Thai & 3.22 & {}[-26.40, 32.84] & 0.21 & 3366 & .831\\
+Traditional Chinese & 9.63 & {}[-12.28, 31.54] & 0.86 & 3366 & .389\\
+Turkish & 16.93 & {}[-2.97, 36.83] & 1.67 & 3366 & .095\\
+\bottomrule
+\end{tabular}
+\end{table*}
